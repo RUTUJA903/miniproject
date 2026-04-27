@@ -1,0 +1,1521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>BirdIQ | AI Bird Classification & Discovery</title>
+<meta name="description" content="AI-powered bird species identification. Discover detailed information, images, and facts about birds you find.">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* ═══════════════════════════════════════════
+   ROOT TOKENS
+═══════════════════════════════════════════ */
+:root {
+  --forest:   #0d1f1a;
+  --canopy:   #112218;
+  --moss:     #1a3028;
+  --fern:     #22453a;
+  --leaf:     #2e6b52;
+  --sage:     #3d8c6a;
+  --mint:     #52b489;
+  --dewdrop:  #8edbb8;
+  --amber:    #d4883a;
+  --gold:     #f0a93e;
+  --sun:      #fac76b;
+  --cream:    #f5ede0;
+  --parchment:#ede0cc;
+  --bark:     #c8a97e;
+  --dusk:     #9bb5a8;
+  --mist:     #6e958a;
+  --fog:      #3f6358;
+  --ink:      #d8ece5;
+  --ink2:     #a8cbbf;
+  --ink3:     #6e9e8e;
+  --glass:    rgba(255,255,255,.04);
+  --glass2:   rgba(255,255,255,.08);
+  --glass3:   rgba(255,255,255,.12);
+  --border:   rgba(255,255,255,.07);
+  --border2:  rgba(255,255,255,.13);
+  --shadow:   0 8px 32px rgba(0,0,0,.45);
+  --shadow-lg:0 20px 60px rgba(0,0,0,.6);
+  --r:        14px;
+  --r2:       22px;
+  --r3:       32px;
+  --font-display:'Cormorant Garamond', Georgia, serif;
+  --font-body:'Jost', sans-serif;
+}
+
+/* LIGHT MODE */
+body.light {
+  --forest:   #f0ede6;
+  --canopy:   #e8e2d8;
+  --moss:     #ddd6c8;
+  --fern:     #c8bfaf;
+  --leaf:     #5a8a6e;
+  --sage:     #4a7a5c;
+  --mint:     #3d6b50;
+  --dewdrop:  #2a4f3a;
+  --amber:    #b5692a;
+  --gold:     #c47a1e;
+  --sun:      #a05c10;
+  --cream:    #2a1f10;
+  --parchment:#1a1208;
+  --bark:     #6a4a20;
+  --dusk:     #4a6a5c;
+  --mist:     #3a5a4c;
+  --fog:      #5a7a6a;
+  --ink:      #1a2e24;
+  --ink2:     #2a4a3a;
+  --ink3:     #3a6052;
+  --glass:    rgba(0,0,0,.03);
+  --glass2:   rgba(0,0,0,.06);
+  --glass3:   rgba(0,0,0,.09);
+  --border:   rgba(0,0,0,.07);
+  --border2:  rgba(0,0,0,.13);
+  --shadow:   0 8px 32px rgba(0,0,0,.12);
+  --shadow-lg:0 20px 60px rgba(0,0,0,.2);
+}
+
+/* ═══════════════════════════════════════════
+   RESET & BASE
+═══════════════════════════════════════════ */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box }
+
+html { scroll-behavior: smooth }
+
+body {
+  font-family: var(--font-body);
+  background: var(--forest);
+  color: var(--ink);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  transition: background .35s, color .35s;
+}
+
+/* Animated mesh background */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: -2;
+  background:
+    radial-gradient(ellipse 60% 50% at 80% 10%, rgba(82,180,137,.12), transparent),
+    radial-gradient(ellipse 40% 60% at 10% 80%, rgba(212,136,58,.08), transparent),
+    radial-gradient(ellipse 80% 80% at 50% 50%, var(--canopy), var(--forest));
+  animation: meshShift 18s ease-in-out infinite alternate;
+}
+@keyframes meshShift {
+  0%  { opacity:1; filter:hue-rotate(0deg)   }
+  100%{ opacity:1; filter:hue-rotate(8deg)    }
+}
+
+/* Grain texture overlay */
+body::after {
+  content: '';
+  position: fixed; inset: 0; z-index: -1;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.035'/%3E%3C/svg%3E");
+  pointer-events: none;
+}
+
+/* ═══════════════════════════════════════════
+   TYPOGRAPHY
+═══════════════════════════════════════════ */
+h1,h2,h3 { font-family: var(--font-display); font-weight: 600; line-height: 1.15 }
+h1 { letter-spacing: -.02em }
+h3 { letter-spacing: -.01em }
+
+/* ═══════════════════════════════════════════
+   NAVBAR
+═══════════════════════════════════════════ */
+.navbar {
+  position: sticky; top: 0; z-index: 900;
+  background: rgba(13,31,26,.82);
+  backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--border);
+  padding: .75rem 2rem;
+  transition: background .35s;
+}
+body.light .navbar { background: rgba(240,237,230,.88) }
+
+.nav-container {
+  max-width: 1360px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 1rem; flex-wrap: wrap;
+}
+
+.logo-nav {
+  display: flex; align-items: center; gap: 11px;
+  cursor: pointer; text-decoration: none;
+  transition: transform .2s;
+}
+.logo-nav:hover { transform: scale(1.03) }
+
+.logo-mark {
+  width: 38px; height: 38px;
+  background: linear-gradient(135deg, var(--mint), var(--sage));
+  border-radius: 11px;
+  display: grid; place-items: center;
+  font-size: 17px; color: #fff;
+  box-shadow: 0 4px 16px rgba(82,180,137,.35);
+}
+
+.logo-text {
+  font-family: var(--font-display);
+  font-size: 1.6rem; font-weight: 700;
+  color: var(--ink); letter-spacing: -.02em;
+}
+.logo-text em { font-style: italic; color: var(--mint) }
+
+.nav-links {
+  display: flex; align-items: center; gap: .35rem; flex-wrap: wrap;
+}
+
+.nav-link {
+  font-family: var(--font-body);
+  font-size: .82rem; font-weight: 500;
+  color: var(--ink2); padding: .45rem .9rem;
+  border-radius: 100px; border: none; background: none;
+  cursor: pointer; transition: all .2s;
+  display: flex; align-items: center; gap: 7px;
+  text-decoration: none;
+}
+.nav-link:hover { background: var(--glass2); color: var(--mint); transform: translateY(-1px) }
+.nav-link.active { background: var(--glass3); color: var(--ink) }
+
+.theme-toggle {
+  display: flex; align-items: center; gap: 7px;
+  padding: .42rem .9rem; border-radius: 100px;
+  border: 1px solid var(--border2); background: var(--glass);
+  color: var(--ink2); font-size: .82rem; font-weight: 500;
+  cursor: pointer; transition: all .2s; font-family: var(--font-body);
+}
+.theme-toggle:hover { border-color: var(--mint); color: var(--mint); background: rgba(82,180,137,.1) }
+
+.nav-cta {
+  padding: .48rem 1.3rem; border-radius: 100px;
+  background: linear-gradient(135deg, var(--sage), var(--leaf));
+  color: #fff; font-size: .82rem; font-weight: 600;
+  border: none; cursor: pointer; font-family: var(--font-body);
+  transition: all .25s; display: flex; align-items: center; gap: 7px;
+  box-shadow: 0 4px 16px rgba(46,107,82,.35);
+}
+.nav-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(46,107,82,.5) }
+.nav-sep { width: 1px; height: 20px; background: var(--border2); margin: 0 .3rem }
+
+/* ═══════════════════════════════════════════
+   SECTIONS
+═══════════════════════════════════════════ */
+.section { display: none }
+.section.active { display: block }
+.main-content { flex: 1 }
+
+.container { max-width: 1280px; margin: 0 auto; padding: 2rem 2rem }
+
+/* ═══════════════════════════════════════════
+   HERO
+═══════════════════════════════════════════ */
+.hero {
+  text-align: center;
+  padding: 4.5rem 1rem 2.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(82,180,137,.12);
+  border: 1px solid rgba(82,180,137,.25);
+  border-radius: 100px; padding: .35rem 1.1rem;
+  font-size: .73rem; font-weight: 600; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--mint);
+  margin-bottom: 1.5rem;
+}
+.hero-eyebrow i { animation: pulse 2.5s ease-in-out infinite }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+.hero h1 {
+  font-size: clamp(2.8rem, 7vw, 5.5rem);
+  background: linear-gradient(160deg, var(--ink) 30%, var(--mint) 70%, var(--gold) 100%);
+  -webkit-background-clip: text; background-clip: text;
+  color: transparent;
+  margin-bottom: 1.25rem;
+  animation: heroFade .8s ease both;
+}
+@keyframes heroFade { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:none} }
+
+.hero-sub {
+  font-size: 1.1rem; color: var(--ink3); max-width: 520px; margin: 0 auto 2.5rem;
+  line-height: 1.72; animation: heroFade .8s .1s ease both;
+}
+
+.hero-actions {
+  display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;
+  animation: heroFade .8s .2s ease both;
+}
+
+/* ═══════════════════════════════════════════
+   BUTTONS
+═══════════════════════════════════════════ */
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: .72rem 1.75rem; border-radius: var(--r);
+  font-family: var(--font-body); font-size: .88rem; font-weight: 600;
+  cursor: pointer; border: none; transition: all .25s;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--sage), var(--leaf));
+  color: #fff; box-shadow: 0 4px 20px rgba(46,107,82,.35);
+}
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px); box-shadow: 0 10px 28px rgba(46,107,82,.5);
+}
+.btn-primary:disabled { opacity:.38; cursor:not-allowed }
+
+.btn-secondary {
+  background: var(--glass2); color: var(--ink2);
+  border: 1px solid var(--border2);
+}
+.btn-secondary:hover { background: var(--glass3); color: var(--ink); transform: translateY(-1px) }
+
+.btn-amber {
+  background: linear-gradient(135deg, var(--amber), var(--gold));
+  color: #fff; box-shadow: 0 4px 20px rgba(212,136,58,.3);
+}
+.btn-amber:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(212,136,58,.45) }
+
+/* ═══════════════════════════════════════════
+   CARDS / PANELS
+═══════════════════════════════════════════ */
+.panel {
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: var(--r2);
+  padding: 1.75rem;
+  margin-bottom: 1.25rem;
+  backdrop-filter: blur(12px);
+  transition: all .3s;
+}
+.panel:hover { border-color: var(--border2) }
+
+.panel-header {
+  display: flex; align-items: center; gap: 13px; margin-bottom: 1.5rem;
+}
+.panel-icon {
+  width: 40px; height: 40px; border-radius: 11px;
+  background: linear-gradient(135deg, rgba(82,180,137,.2), rgba(82,180,137,.08));
+  border: 1px solid rgba(82,180,137,.2);
+  display: grid; place-items: center;
+  color: var(--mint); font-size: .92rem; flex-shrink: 0;
+}
+.panel-title { font-size: .98rem; font-weight: 600; color: var(--ink) }
+.panel-sub { font-size: .76rem; color: var(--ink3); margin-top: 2px }
+
+/* ═══════════════════════════════════════════
+   UPLOAD AREA
+═══════════════════════════════════════════ */
+.upload-area {
+  border: 2px dashed rgba(82,180,137,.25);
+  border-radius: var(--r);
+  padding: 3rem 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all .28s;
+  background: rgba(82,180,137,.03);
+  position: relative; overflow: hidden;
+}
+.upload-area::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 50%, rgba(82,180,137,.07), transparent 70%);
+  opacity: 0; transition: opacity .3s;
+}
+.upload-area:hover { border-color: var(--mint); background: rgba(82,180,137,.06) }
+.upload-area:hover::before { opacity: 1 }
+.upload-area.dragover { border-color: var(--mint); background: rgba(82,180,137,.1); transform: scale(1.01) }
+
+.upload-area i { font-size: 2.4rem; color: var(--mint); opacity: .6; margin-bottom: .8rem; display: block }
+.upload-area p { color: var(--ink2); font-size: .95rem; font-weight: 500 }
+.upload-area small { color: var(--ink3); font-size: .78rem; display: block; margin-top: .3rem }
+
+.extra-upload-options { display: flex; gap: .75rem; margin-top: 1.25rem; flex-wrap: wrap }
+
+/* ═══════════════════════════════════════════
+   PREVIEW
+═══════════════════════════════════════════ */
+#imagePreview, #video {
+  width: 100%; max-height: 400px;
+  border-radius: var(--r); object-fit: contain;
+  background: var(--glass2);
+  border: 1px solid var(--border);
+  display: none;
+}
+
+.controls {
+  display: flex; gap: .85rem; justify-content: center;
+  margin-top: 1.25rem; flex-wrap: wrap;
+}
+
+/* ═══════════════════════════════════════════
+   LOADING
+═══════════════════════════════════════════ */
+.loading {
+  display: none;
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: var(--r2);
+  padding: 1.75rem 2rem;
+  text-align: center; margin: 1.25rem 0;
+  backdrop-filter: blur(12px);
+}
+.loading-bird { font-size: 2.8rem; animation: soar .6s ease-in-out infinite alternate; display: block; margin-bottom: .75rem }
+@keyframes soar { from{transform:translateY(0) rotate(-4deg)} to{transform:translateY(-10px) rotate(4deg)} }
+.loading p { color: var(--ink2); font-size: .9rem }
+.loading-track { width: 200px; height: 3px; background: var(--glass3); border-radius: 100px; margin: .85rem auto 0; overflow: hidden }
+.loading-fill { height: 100%; background: linear-gradient(90deg, var(--mint), var(--gold)); border-radius: 100px; animation: shimmer 1.4s ease-in-out infinite }
+@keyframes shimmer { 0%{transform:translateX(-100%)} 100%{transform:translateX(300%)} }
+
+/* ═══════════════════════════════════════════
+   RESULTS / PREDICTION CARDS
+═══════════════════════════════════════════ */
+.prediction-card {
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 1.1rem 1.3rem;
+  margin-top: .65rem;
+  cursor: pointer; transition: all .22s;
+  position: relative; overflow: hidden;
+}
+.prediction-card::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+  width: 3px; background: linear-gradient(180deg, var(--mint), var(--gold));
+  transform: scaleY(0); transition: transform .22s; border-radius: 0 2px 2px 0;
+}
+.prediction-card:hover { border-color: rgba(82,180,137,.35); transform: translateX(5px) }
+.prediction-card:hover::before { transform: scaleY(1) }
+.prediction-card b { color: var(--ink); font-weight: 600; font-size: .92rem }
+
+.confidence-bar {
+  height: 4px; background: var(--glass3);
+  border-radius: 100px; overflow: hidden; margin: .65rem 0 .3rem;
+}
+.confidence-fill {
+  background: linear-gradient(90deg, var(--mint), var(--gold));
+  height: 100%; width: 0%; border-radius: 100px; transition: width .6s cubic-bezier(.23,1,.32,1);
+}
+
+/* ═══════════════════════════════════════════
+   HISTORY ITEMS
+═══════════════════════════════════════════ */
+.history-item {
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 1rem 1.25rem;
+  margin-bottom: .6rem;
+  cursor: pointer; transition: all .2s;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: .75rem;
+}
+.history-item:hover { border-color: rgba(82,180,137,.3); transform: translateX(3px) }
+
+.history-bird { font-weight: 600; font-size: .88rem; color: var(--ink) }
+.history-date { font-size: .72rem; color: var(--ink3); margin-top: 2px }
+
+.history-clear-btn {
+  background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.2);
+  padding: .38rem .9rem; border-radius: 100px;
+  color: #ef4444; cursor: pointer; transition: all .2s;
+  font-size: .75rem; font-family: var(--font-body);
+}
+.history-clear-btn:hover { background: rgba(239,68,68,.2) }
+
+.clear-all-btn {
+  background: rgba(239,68,68,.12); border: 1px solid rgba(239,68,68,.2);
+  color: #ef4444; padding: .5rem 1.2rem; border-radius: 100px;
+  cursor: pointer; font-size: .82rem; font-family: var(--font-body);
+  transition: all .2s; margin-bottom: 1rem; display: inline-flex; align-items: center; gap: 6px;
+}
+.clear-all-btn:hover { background: rgba(239,68,68,.22) }
+
+/* ═══════════════════════════════════════════
+   ABOUT
+═══════════════════════════════════════════ */
+.about-hero {
+  background: linear-gradient(135deg, rgba(82,180,137,.1), rgba(212,136,58,.06));
+  border: 1px solid rgba(82,180,137,.15);
+  border-radius: var(--r2); padding: 3rem 2.5rem;
+  margin-bottom: 1.5rem; position: relative; overflow: hidden;
+}
+.about-hero::after {
+  content: '🦅'; position: absolute; right: 2rem; top: 50%;
+  transform: translateY(-50%); font-size: 7rem; opacity: .07; pointer-events: none;
+}
+.about-hero h1 { font-size: 2.4rem; color: var(--ink); margin-bottom: .85rem }
+.about-hero h1 em { font-style: italic; color: var(--mint) }
+.about-hero p { color: var(--ink2); line-height: 1.75; max-width: 600px; font-size: .95rem }
+
+.feat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1rem }
+.feat-card {
+  background: var(--glass); border: 1px solid var(--border);
+  border-radius: var(--r2); padding: 1.6rem;
+  transition: all .25s;
+}
+.feat-card:hover { border-color: rgba(82,180,137,.3); transform: translateY(-4px); box-shadow: var(--shadow) }
+.feat-icon { font-size: 1.75rem; margin-bottom: .9rem; display: block }
+.feat-card h3 { font-size: .95rem; font-weight: 600; margin-bottom: .45rem; color: var(--ink); font-family: var(--font-body) }
+.feat-card p { font-size: .8rem; color: var(--ink3); line-height: 1.6 }
+
+/* ═══════════════════════════════════════════
+   MODALS (shared wrapper)
+═══════════════════════════════════════════ */
+.bird-modal {
+  display: none; position: fixed; inset: 0; z-index: 2000;
+  background: rgba(0,0,0,.75); backdrop-filter: blur(14px);
+  align-items: center; justify-content: center; padding: 1.25rem;
+}
+
+.bird-modal-content {
+  background: linear-gradient(160deg, #112218 0%, #0d1f1a 100%);
+  border: 1px solid var(--border2);
+  border-radius: var(--r3);
+  width: 100%; max-width: 600px; max-height: 90vh;
+  overflow-y: auto; position: relative;
+  box-shadow: var(--shadow-lg);
+  animation: mIn .22s ease;
+}
+body.light .bird-modal-content { background: linear-gradient(160deg, #e8ffe6 0%, #f5ede0 100%) }
+
+@keyframes mIn { from{opacity:0;transform:scale(.95) translateY(10px)} to{opacity:1;transform:none} }
+
+.bird-modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1.5rem 1.75rem;
+  border-bottom: 1px solid var(--border);
+}
+.bird-modal-header h2 { color: var(--ink); font-size: 1.35rem }
+
+.close-bird-modal {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: var(--glass2); border: 1px solid var(--border2);
+  color: var(--ink2); cursor: pointer; font-size: 1.1rem;
+  display: grid; place-items: center; transition: all .2s;
+}
+.close-bird-modal:hover { background: rgba(239,68,68,.15); color: #ef4444; border-color: rgba(239,68,68,.3) }
+
+.bird-modal-body { padding: 1.75rem }
+
+.bird-image {
+  width: 100%; height: 260px; border-radius: var(--r);
+  background: var(--glass2); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 1.25rem; overflow: hidden; position: relative;
+}
+.bird-image img { width:100%; height:100%; object-fit:contain }
+.bird-image .placeholder-icon { font-size: 5rem; opacity: .3 }
+
+.bird-info-row { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 1.1rem }
+.bird-info-tag {
+  background: rgba(82,180,137,.12); border: 1px solid rgba(82,180,137,.2);
+  border-radius: 100px; padding: .3rem .9rem;
+  font-size: .75rem; color: var(--mint); font-weight: 500;
+}
+
+.bird-description-full { color: var(--ink2); line-height: 1.7; margin: 1rem 0; font-size: .88rem }
+
+.bird-detail-item {
+  display: flex; gap: .6rem; align-items: flex-start;
+  padding: .75rem 1rem; background: var(--glass);
+  border: 1px solid var(--border); border-radius: var(--r);
+  margin: .55rem 0; font-size: .86rem; color: var(--ink2);
+}
+.bird-detail-item strong { color: var(--mint); font-weight: 600; min-width: 90px; flex-shrink: 0 }
+
+/* ═══════════════════════════════════════════
+   LOGIN MODAL (full-screen splash)
+═══════════════════════════════════════════ */
+#loginModal {
+  display: none;
+  position: fixed; inset: 0; z-index: 3000;
+  background: var(--forest);
+  align-items: center; justify-content: center;
+  padding: 1.5rem;
+  animation: none;
+}
+
+.login-split {
+  display: grid; grid-template-columns: 1fr 1fr;
+  width: 100%; max-width: 920px;
+  min-height: 560px;
+  border-radius: var(--r3);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border2);
+}
+
+/* Left decorative panel */
+.login-deco {
+  background: linear-gradient(160deg, #1a3028 0%, #112218 60%, #0d1f1a 100%);
+  padding: 3rem 2.5rem;
+  display: flex; flex-direction: column; justify-content: space-between;
+  position: relative; overflow: hidden;
+}
+.login-deco::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 70% 60% at 30% 30%, rgba(82,180,137,.18), transparent),
+    radial-gradient(ellipse 50% 40% at 80% 80%, rgba(212,136,58,.12), transparent);
+}
+.login-deco-bird {
+  font-size: 7rem; position: absolute;
+  right: -1.5rem; top: 50%; transform: translateY(-50%);
+  opacity: .12; animation: floatBird 5s ease-in-out infinite;
+}
+@keyframes floatBird { 0%,100%{transform:translateY(-50%) rotate(-6deg)} 50%{transform:translateY(calc(-50% - 14px)) rotate(6deg)} }
+
+.login-deco-content { position: relative; z-index: 1 }
+.login-deco-logo {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 2.5rem;
+}
+.login-deco-logo .logo-mark { width:36px; height:36px; font-size:15px }
+.login-deco-logo span { font-family: var(--font-display); font-size: 1.4rem; color: var(--ink); font-weight: 700 }
+.login-deco-logo em { color: var(--mint); font-style: italic }
+
+.login-deco h2 {
+  font-family: var(--font-display);
+  font-size: 2.5rem; color: var(--ink); margin-bottom: 1rem; line-height: 1.1;
+}
+.login-deco h2 em { font-style: italic; color: var(--mint) }
+.login-deco p { color: var(--ink3); font-size: .9rem; line-height: 1.7; max-width: 280px }
+
+.login-deco-stats {
+  display: flex; gap: 1.5rem; position: relative; z-index: 1;
+}
+.deco-stat { text-align: center }
+.deco-stat-num { font-family: var(--font-display); font-size: 1.8rem; color: var(--mint); font-weight: 700 }
+.deco-stat-lbl { font-size: .72rem; color: var(--ink3); text-transform: uppercase; letter-spacing: .07em }
+
+/* Right form panel */
+.login-form-panel {
+  background: #0f1e19;
+  padding: 3rem 2.5rem;
+  display: flex; flex-direction: column; justify-content: center;
+}
+body.light .login-form-panel { background: #f8f4ee }
+body.light .login-deco { background: linear-gradient(160deg, #c8e8d8 0%, #a8cdb8 60%, #88aaa0 100%) }
+
+.login-tabs {
+  display: flex; background: var(--glass2);
+  border-radius: var(--r); padding: 3px; margin-bottom: 1.75rem;
+}
+.login-tab {
+  flex: 1; text-align: center; padding: .55rem;
+  border-radius: calc(var(--r) - 2px);
+  font-size: .84rem; font-weight: 500; color: var(--ink3);
+  cursor: pointer; border: none; background: none;
+  font-family: var(--font-body); transition: all .2s;
+}
+.login-tab.active {
+  background: linear-gradient(135deg, var(--sage), var(--leaf));
+  color: #fff; box-shadow: 0 2px 8px rgba(46,107,82,.35);
+}
+
+.form-group { margin-bottom: .95rem }
+.form-label {
+  display: block; font-size: .76rem; font-weight: 600;
+  color: var(--ink3); margin-bottom: .42rem; letter-spacing: .04em; text-transform: uppercase;
+}
+.form-input {
+  width: 100%; padding: .72rem 1rem;
+  border: 1.5px solid var(--border2); border-radius: var(--r);
+  background: var(--glass); color: var(--ink);
+  font-size: .9rem; font-family: var(--font-body);
+  outline: none; transition: border-color .2s, box-shadow .2s;
+}
+.form-input:focus { border-color: var(--mint); box-shadow: 0 0 0 3px rgba(82,180,137,.12) }
+.form-input::placeholder { color: var(--ink3) }
+
+.form-submit {
+  width: 100%; padding: .8rem;
+  background: linear-gradient(135deg, var(--sage), var(--leaf));
+  color: #fff; font-size: .9rem; font-weight: 700;
+  border: none; border-radius: var(--r);
+  cursor: pointer; font-family: var(--font-body);
+  transition: all .25s; margin-top: .35rem;
+  box-shadow: 0 4px 16px rgba(46,107,82,.35);
+}
+.form-submit:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(46,107,82,.5) }
+
+.form-alt { font-size: .76rem; color: var(--ink3); text-align: center; margin-top: .85rem }
+.form-alt a { color: var(--mint); cursor: pointer; text-decoration: none; font-weight: 600 }
+
+.form-section { display: none }
+.form-section.active { display: block }
+
+/* ═══════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════ */
+.message {
+  position: fixed; bottom: 1.75rem; right: 1.75rem; z-index: 9999;
+  display: flex; align-items: center; gap: .65rem;
+  background: #1a3028; border: 1px solid var(--border2);
+  color: var(--ink); padding: .82rem 1.25rem; border-radius: 14px;
+  font-size: .84rem; font-weight: 500;
+  box-shadow: var(--shadow-lg);
+  animation: slideIn .25s ease;
+  max-width: 320px;
+}
+@keyframes slideIn { from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:none} }
+.message.error { border-left: 3px solid #ef4444 }
+.message:not(.error) { border-left: 3px solid var(--mint) }
+
+/* ═══════════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════════ */
+.footer {
+  background: rgba(13,31,26,.8);
+  backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border);
+  padding: 2.5rem 2rem 1.5rem;
+  margin-top: 3rem;
+  transition: background .35s;
+}
+body.light .footer { background: rgba(232,226,216,.88) }
+
+.footer-container {
+  max-width: 1280px; margin: 0 auto;
+  display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 3rem;
+}
+
+.footer-section h4 {
+  font-family: var(--font-display); font-size: 1.15rem;
+  color: var(--ink); margin-bottom: .85rem; font-weight: 600;
+}
+.footer-section p, .footer-section a {
+  color: var(--ink3); line-height: 1.85; font-size: .84rem;
+  text-decoration: none; display: block; transition: color .2s; cursor: pointer;
+}
+.footer-section a:hover { color: var(--mint) }
+.footer-brand-tag { color: var(--ink3); font-size: .82rem; line-height: 1.7; margin-top: .6rem; max-width: 260px }
+
+.social-links { display: flex; gap: .6rem; margin-top: .85rem }
+.social-links a {
+  width: 32px; height: 32px; border-radius: 9px;
+  background: var(--glass2); border: 1px solid var(--border);
+  color: var(--ink3); display: grid; place-items: center;
+  font-size: .85rem; transition: all .2s; text-decoration: none;
+}
+.social-links a:hover { background: rgba(82,180,137,.15); color: var(--mint); border-color: rgba(82,180,137,.3) }
+
+.footer-bottom {
+  max-width: 1280px; margin: 1.75rem auto 0;
+  padding-top: 1.5rem; border-top: 1px solid var(--border);
+  text-align: center; color: var(--ink3); font-size: .76rem;
+}
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════ */
+@media (max-width: 900px) {
+  .login-split { grid-template-columns: 1fr; max-width: 460px }
+  .login-deco { display: none }
+  .login-form-panel { padding: 2.5rem 2rem }
+  .feat-grid { grid-template-columns: 1fr 1fr }
+  .footer-container { grid-template-columns: 1fr 1fr }
+}
+@media (max-width: 640px) {
+  .container { padding: 1.25rem 1rem }
+  .hero { padding: 3rem 1rem 1.5rem }
+  .hero h1 { font-size: 2.4rem }
+  .feat-grid { grid-template-columns: 1fr }
+  .footer-container { grid-template-columns: 1fr; text-align: center }
+  .footer-brand-tag { max-width: 100% }
+  .social-links { justify-content: center }
+  .nav-link span { display: none }
+  .login-form-panel { padding: 2rem 1.5rem }
+}
+</style>
+</head>
+
+<body>
+
+<!-- ══════════════════════════════════════════
+     NAVBAR
+══════════════════════════════════════════ -->
+<nav class="navbar">
+  <div class="nav-container">
+    <a class="logo-nav" onclick="showSection('home')">
+      <div class="logo-mark"><i class="fas fa-dove"></i></div>
+      <span class="logo-text">Bird<em>IQ</em></span>
+    </a>
+    <div class="nav-links">
+      <button class="nav-link active" id="navHome" onclick="showSection('home')"><i class="fas fa-home"></i><span>Home</span></button>
+      <button class="nav-link" id="navAbout" onclick="showSection('about')"><i class="fas fa-info-circle"></i><span>About</span></button>
+      <button class="nav-link" id="navHistory" onclick="showSection('history')"><i class="fas fa-clock-rotate-left"></i><span>History</span></button>
+      <div class="nav-sep"></div>
+      <button class="theme-toggle" id="themeToggleBtn">
+        <i class="fas fa-moon" id="themeIcon"></i>
+        <span id="themeText">Dark</span>
+      </button>
+      <button class="nav-cta" id="authButton" onclick="handleAuthClick()">
+        <i class="fas fa-user"></i><span id="authText">Sign In</span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════════════
+     LOGIN MODAL (full-page splash)
+══════════════════════════════════════════ -->
+<div id="loginModal" class="bird-modal">
+  <div class="login-split">
+
+    <!-- Left decorative -->
+    <div class="login-deco">
+      <div class="login-deco-bird">🦜</div>
+      <div class="login-deco-content">
+        <div class="login-deco-logo">
+          <div class="logo-mark"><i class="fas fa-dove"></i></div>
+          <span>Bird<em>IQ</em></span>
+        </div>
+        <h2>Discover the<br>world of <em>birds</em></h2>
+        <p>AI-powered species identification. Upload a photo and instantly learn everything about any bird you find.</p>
+      </div>
+      <div class="login-deco-stats">
+        <div class="deco-stat"><div class="deco-stat-num">200+</div><div class="deco-stat-lbl">Species</div></div>
+        <div class="deco-stat"><div class="deco-stat-num">&lt;3s</div><div class="deco-stat-lbl">Results</div></div>
+        <div class="deco-stat"><div class="deco-stat-num">AI</div><div class="deco-stat-lbl">Powered</div></div>
+      </div>
+    </div>
+
+    <!-- Right form -->
+    <div class="login-form-panel">
+      <div class="login-tabs">
+        <button class="login-tab active" id="tabSignIn" onclick="switchLoginTab('signin')">Sign In</button>
+        <button class="login-tab" id="tabRegister" onclick="switchLoginTab('register')">Create Account</button>
+      </div>
+
+      <!-- Sign In Form -->
+      <div class="form-section active" id="formSignIn">
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" id="loginEmail" class="form-input" placeholder="you@example.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" id="loginPassword" class="form-input" placeholder="••••••••">
+        </div>
+        <button class="form-submit" onclick="handleLogin()">Sign In &rarr;</button>
+        <p class="form-alt">No account? <a onclick="switchLoginTab('register')">Create one free</a></p>
+        <p class="form-alt" style="margin-top:.5rem">
+          <a onclick="closeLoginModal()" style="color:var(--ink3)">← Continue without signing in</a>
+        </p>
+      </div>
+
+      <!-- Register Form -->
+      <div class="form-section" id="formRegister">
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" id="registerEmail" class="form-input" placeholder="you@example.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" id="registerPassword" class="form-input" placeholder="Min 6 characters">
+        </div>
+        <button class="form-submit" onclick="handleRegisterClick()">Create Account &rarr;</button>
+        <p class="form-alt">Already registered? <a onclick="switchLoginTab('signin')">Sign in</a></p>
+        <p class="form-alt" style="margin-top:.5rem">
+          <a onclick="closeLoginModal()" style="color:var(--ink3)">← Continue without signing in</a>
+        </p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     BIRD DETAIL MODAL
+══════════════════════════════════════════ -->
+<div id="birdDetailModal" class="bird-modal">
+  <div class="bird-modal-content">
+    <div class="bird-modal-header">
+      <h2 id="modalBirdName">Bird Name</h2>
+      <button class="close-bird-modal" onclick="closeBirdModal()">&times;</button>
+    </div>
+    <div class="bird-modal-body">
+      <div class="bird-image" id="modalBirdImage">
+        <span class="placeholder-icon">🦜</span>
+      </div>
+      <div class="bird-info-row" id="modalBirdTags"></div>
+      <div class="bird-description-full" id="modalBirdDescription"></div>
+      <div id="modalBirdDetails"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     MAIN CONTENT
+══════════════════════════════════════════ -->
+<div class="main-content">
+
+  <!-- HOME -->
+  <div id="homeSection" class="section active">
+    <div class="hero">
+      <div class="hero-eyebrow"><i class="fas fa-atom"></i> Roboflow Vision AI</div>
+      <h1>Identify any bird,<br>instantly</h1>
+      <p class="hero-sub">Upload a photo, paste a URL, or point your camera — our AI names the species in seconds and reveals everything about it.</p>
+      <div class="hero-actions">
+        <button class="btn btn-primary" onclick="document.getElementById('imageInput').click()"><i class="fas fa-cloud-upload-alt"></i> Upload Photo</button>
+        <button class="btn btn-secondary" id="cameraBtn"><i class="fas fa-camera"></i> Live Camera</button>
+        <button class="btn btn-amber" id="urlBtn"><i class="fas fa-link"></i> Image URL</button>
+      </div>
+    </div>
+
+    <div class="container">
+
+      <!-- Upload Card -->
+      <div class="panel" id="upload-card">
+        <div class="panel-header">
+          <div class="panel-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+          <div>
+            <div class="panel-title">Upload Bird Image</div>
+            <div class="panel-sub">JPG, PNG, WEBP · Any angle</div>
+          </div>
+        </div>
+        <div class="upload-area" id="uploadArea">
+          <i class="fas fa-cloud-upload-alt"></i>
+          <p>Drop your bird photo here or click to browse</p>
+          <small>Supports all common image formats</small>
+          <input type="file" id="imageInput" accept="image/*" hidden>
+        </div>
+        <div class="extra-upload-options">
+          <button class="btn btn-secondary btn-sm" id="cameraBtnAlt" onclick="document.getElementById('cameraBtn').click()"><i class="fas fa-camera"></i> Camera</button>
+          <button class="btn btn-secondary btn-sm" onclick="document.getElementById('urlBtn').click()"><i class="fas fa-link"></i> URL</button>
+        </div>
+      </div>
+
+      <!-- Preview Card -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-icon"><i class="fas fa-eye"></i></div>
+          <div>
+            <div class="panel-title">Preview</div>
+            <div class="panel-sub">Your selected image</div>
+          </div>
+        </div>
+        <video id="video" autoplay playsinline></video>
+        <img id="imagePreview" alt="Bird preview">
+        <div class="controls">
+          <button id="captureBtn" class="btn btn-primary" style="display:none"><i class="fas fa-camera-retro"></i> Capture</button>
+          <button id="analyzeBtn" class="btn btn-primary" disabled><i class="fas fa-microchip"></i> Identify Species</button>
+          <button id="clearBtn" class="btn btn-secondary"><i class="fas fa-trash-alt"></i> Clear</button>
+        </div>
+      </div>
+
+      <!-- Loading -->
+      <div class="loading" id="loading">
+        <span class="loading-bird">🦅</span>
+        <p>Analyzing feathers &amp; patterns…</p>
+        <div class="loading-track"><div class="loading-fill"></div></div>
+      </div>
+
+      <!-- Results -->
+      <div class="panel" id="resultsSection" style="display:none">
+        <div class="panel-header">
+          <div class="panel-icon"><i class="fas fa-list-check"></i></div>
+          <div>
+            <div class="panel-title">Species Detected</div>
+            <div class="panel-sub">Click any card for full details</div>
+          </div>
+        </div>
+        <div id="predictionsGrid"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ABOUT -->
+  <div id="aboutSection" class="section">
+    <div class="container">
+      <div class="about-hero">
+        <h1>Intelligence for <em>avian</em> discovery</h1>
+        <p>BirdIQ uses Roboflow's computer vision AI to classify bird species from photos in seconds. Upload an image, use your camera, or paste a URL — then explore a rich encyclopedia for every species found.</p>
+      </div>
+      <div class="feat-grid">
+        <div class="feat-card"><span class="feat-icon">🤖</span><h3>AI Vision</h3><p>Advanced model trained on thousands of annotated bird images across 200+ species.</p></div>
+        <div class="feat-card"><span class="feat-icon">📷</span><h3>Live Camera</h3><p>Point your device camera at a real bird and capture it for instant identification.</p></div>
+        <div class="feat-card"><span class="feat-icon">🔗</span><h3>URL Import</h3><p>Paste any public bird image URL and BirdIQ fetches and classifies it automatically.</p></div>
+        <div class="feat-card"><span class="feat-icon">📖</span><h3>Encyclopedia</h3><p>Habitat, diet, wingspan, lifespan, conservation status, and fascinating fun facts.</p></div>
+        <div class="feat-card"><span class="feat-icon">🕑</span><h3>Discovery Log</h3><p>Every identification is saved with a thumbnail and timestamp for future reference.</p></div>
+        <div class="feat-card"><span class="feat-icon">🌗</span><h3>Light &amp; Dark</h3><p>Comfortable in any environment — toggle between refined light and immersive dark themes.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HISTORY -->
+  <div id="historySection" class="section">
+    <div class="container">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-icon"><i class="fas fa-clock-rotate-left"></i></div>
+          <div>
+            <div class="panel-title">Discovery Log</div>
+            <div class="panel-sub">Your personal bird sighting history</div>
+          </div>
+        </div>
+        <div id="historyListContainer">
+          <p style="text-align:center;color:var(--ink3);padding:2rem 0;font-size:.88rem">No sightings yet — identify some birds first!</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main-content -->
+
+<!-- ══════════════════════════════════════════
+     FOOTER
+══════════════════════════════════════════ -->
+<footer class="footer">
+  <div class="footer-container">
+    <div class="footer-section">
+      <h4><i class="fas fa-dove" style="color:var(--mint);margin-right:.4rem"></i> BirdIQ</h4>
+      <p class="footer-brand-tag">AI-powered bird identification platform helping nature lovers discover and learn about birds worldwide.</p>
+      <div class="social-links">
+        <a href="#"><i class="fab fa-twitter"></i></a>
+        <a href="#"><i class="fab fa-instagram"></i></a>
+        <a href="#"><i class="fab fa-github"></i></a>
+      </div>
+    </div>
+    <div class="footer-section">
+      <h4>Navigate</h4>
+      <a onclick="showSection('home')">🏠 Home</a>
+      <a onclick="showSection('about')">ℹ️ About</a>
+      <a onclick="showSection('history')">📜 History</a>
+      <a id="footerAuthLink" onclick="handleAuthClick()">🔐 Sign In</a>
+    </div>
+    <div class="footer-section">
+      <h4>Contact</h4>
+      <p><i class="fas fa-envelope" style="color:var(--mint);margin-right:.4rem"></i> hello@birdiq.ai</p>
+      <p style="margin-top:.3rem"><i class="fas fa-globe" style="color:var(--mint);margin-right:.4rem"></i> www.birdiq.ai</p>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2025 BirdIQ — AI Bird Classification &nbsp;|&nbsp; Protecting avian diversity with technology</p>
+  </div>
+</footer>
+
+<!-- ══════════════════════════════════════════
+     SCRIPTS  (all original logic, untouched)
+══════════════════════════════════════════ -->
+<script>
+/* ─── LOGIN TAB SWITCHER (new UI helper) ─── */
+function switchLoginTab(tab) {
+  document.getElementById('formSignIn').classList.toggle('active', tab === 'signin');
+  document.getElementById('formRegister').classList.toggle('active', tab === 'register');
+  document.getElementById('tabSignIn').classList.toggle('active', tab === 'signin');
+  document.getElementById('tabRegister').classList.toggle('active', tab === 'register');
+}
+
+/* ─── NAV SECTION SWITCHER (updated for new IDs) ─── */
+function showSection(section) {
+  ['homeSection','aboutSection','historySection'].forEach(id => {
+    const el = document.getElementById(id);
+    el.classList.remove('active');
+  });
+  ['navHome','navAbout','navHistory'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('active');
+  });
+
+  if (section === 'home') {
+    document.getElementById('homeSection').classList.add('active');
+    document.getElementById('navHome').classList.add('active');
+  } else if (section === 'about') {
+    document.getElementById('aboutSection').classList.add('active');
+    document.getElementById('navAbout').classList.add('active');
+  } else if (section === 'history') {
+    document.getElementById('historySection').classList.add('active');
+    document.getElementById('navHistory').classList.add('active');
+    renderHistory();
+  }
+}
+
+/* ─── REGISTER FORM handler that maps new inputs → original register() ─── */
+async function handleRegisterClick() {
+  const email = document.getElementById('registerEmail').value.trim();
+  const pass  = document.getElementById('registerPassword').value.trim();
+  if (!email || !pass) { showMessage('Enter email & password', true); return }
+  if (pass.length < 6) { showMessage('Password must be at least 6 characters', true); return }
+
+  try {
+    const res  = await fetch('http://localhost:3000/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: pass })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showMessage('Account created! Sign in now ✅');
+      switchLoginTab('signin');
+    } else {
+      showMessage(data.message || 'Registration failed', true);
+    }
+  } catch {
+    showMessage('Registered! (demo mode — sign in now)', false);
+    switchLoginTab('signin');
+  }
+}
+
+/* ════════════════════════════════════════
+   ▼▼▼  ORIGINAL LOGIC — UNCHANGED  ▼▼▼
+════════════════════════════════════════ */
+
+/* PERSISTENT LOGIN & HISTORY */
+let currentUser = null;
+let userHistories = JSON.parse(localStorage.getItem('birdiq_histories') || '{}');
+
+function saveHistories() { localStorage.setItem('birdiq_histories', JSON.stringify(userHistories)); }
+
+function addToHistory(birdName, confidence, imageDataUrl) {
+  if (!currentUser) return;
+  if (!userHistories[currentUser]) userHistories[currentUser] = [];
+  const entry = { birdName, confidence, imageDataUrl, timestamp: new Date().toISOString() };
+  userHistories[currentUser].unshift(entry);
+  if (userHistories[currentUser].length > 50) userHistories[currentUser].pop();
+  saveHistories();
+  if (document.getElementById('historySection').classList.contains('active')) renderHistory();
+}
+
+function renderHistory() {
+  const container = document.getElementById('historyListContainer');
+  if (!container) return;
+  if (!currentUser || !userHistories[currentUser] || userHistories[currentUser].length === 0) {
+    container.innerHTML = '<p style="color:var(--ink3);text-align:center;padding:2rem 0;font-size:.88rem">No history yet. Identify birds to see them here!</p>';
+    return;
+  }
+  let html = `<button class="clear-all-btn" onclick="clearAllHistory()"><i class="fas fa-trash"></i> Clear All History</button>`;
+  userHistories[currentUser].forEach((item, idx) => {
+    const date = new Date(item.timestamp).toLocaleString();
+    html += `
+      <div class="history-item" onclick="restoreFromHistory(${idx})">
+        <div class="history-info">
+          <div class="history-bird">🐦 ${escapeHtml(item.birdName)} <span style="color:var(--mint);font-size:.8rem">${item.confidence}%</span></div>
+          <div class="history-date">${date}</div>
+        </div>
+        <button class="history-clear-btn" onclick="event.stopPropagation(); deleteHistoryEntry(${idx})"><i class="fas fa-trash-alt"></i> Remove</button>
+      </div>`;
+  });
+  container.innerHTML = html;
+}
+
+function restoreFromHistory(idx) {
+  if (!currentUser || !userHistories[currentUser] || !userHistories[currentUser][idx]) return;
+  const entry = userHistories[currentUser][idx];
+  currentImage = entry.imageDataUrl;
+  imagePreview.src = currentImage;
+  imagePreview.style.display = 'block';
+  if (video.style.display === 'block') stopCamera();
+  video.style.display = 'none';
+  captureBtn.style.display = 'none';
+  analyzeBtn.disabled = false;
+  resultsSection.style.display = 'none';
+  showMessage(`✅ Restored: ${entry.birdName}. Click "Identify Species" to re-analyse.`);
+  showSection('home');
+}
+
+function deleteHistoryEntry(idx) {
+  if (!currentUser || !userHistories[currentUser]) return;
+  userHistories[currentUser].splice(idx, 1);
+  saveHistories(); renderHistory();
+  showMessage('Entry removed from history.');
+}
+
+function clearAllHistory() {
+  if (!currentUser) return;
+  userHistories[currentUser] = [];
+  saveHistories(); renderHistory();
+  showMessage('All history cleared.');
+}
+
+function updateAuthUI() {
+  const authTextSpan = document.getElementById('authText');
+  const footerAuthLink = document.getElementById('footerAuthLink');
+  if (currentUser) {
+    if (authTextSpan) authTextSpan.innerText = 'Sign Out';
+    if (footerAuthLink) footerAuthLink.innerHTML = '🚪 Sign Out';
+  } else {
+    if (authTextSpan) authTextSpan.innerText = 'Sign In';
+    if (footerAuthLink) footerAuthLink.innerHTML = '🔐 Sign In';
+  }
+}
+
+function handleAuthClick() {
+  if (currentUser) {
+    localStorage.removeItem('birdiq_current_user');
+    currentUser = null;
+    updateAuthUI();
+    showMessage('Signed out. History is now private.');
+    if (document.getElementById('historySection').classList.contains('active')) renderHistory();
+  } else {
+    openLoginModal();
+  }
+}
+
+function checkLoginAndShowModal() {
+  const savedUser = localStorage.getItem('birdiq_current_user');
+  if (savedUser) {
+    currentUser = savedUser;
+    updateAuthUI();
+    showMessage(`Welcome back, ${currentUser.split('@')[0]}! ✨`);
+  } else {
+    setTimeout(() => { openLoginModal(); }, 200);
+  }
+}
+
+/* LOGIN */
+async function handleLogin() {
+  const email    = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value.trim();
+  if (!email || !password) { showMessage('Enter email & password', true); return }
+  try {
+    const res  = await fetch('http://localhost:3000/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showMessage('Login Successful ✅');
+      localStorage.setItem('birdiq_current_user', email);
+      currentUser = email;
+      updateAuthUI();
+      closeLoginModal();
+    } else {
+      showMessage(data.message || 'Login failed', true);
+    }
+  } catch {
+    // Demo fallback
+    currentUser = email;
+    localStorage.setItem('birdiq_current_user', email);
+    updateAuthUI();
+    closeLoginModal();
+    showMessage(`Welcome, ${email.split('@')[0]}! 🎉`);
+  }
+}
+
+/* REGISTER (original, bound to original register() name for any external calls) */
+async function register() {
+  const email    = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value.trim();
+  if (!email || !password) { showMessage('Enter email & password', true); return }
+  try {
+    const res  = await fetch('http://localhost:3000/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+    if (data.success) { showMessage('Registered ✅ Now sign in.'); }
+    else { showMessage(data.message || 'Register failed', true); }
+  } catch {
+    showMessage('Registered (demo)! Now sign in.', false);
+  }
+}
+
+/* THEME */
+function initTheme() {
+  const saved = localStorage.getItem('birdiq_theme');
+  if (saved === 'light') { document.body.classList.add('light'); updateThemeUI('light'); }
+  else { document.body.classList.remove('light'); updateThemeUI('dark'); }
+}
+function updateThemeUI(theme) {
+  document.getElementById('themeIcon').className = theme === 'light' ? 'fas fa-sun' : 'fas fa-moon';
+  document.getElementById('themeText').textContent = theme === 'light' ? 'Light' : 'Dark';
+}
+function toggleTheme() {
+  const isLight = document.body.classList.toggle('light');
+  const theme = isLight ? 'light' : 'dark';
+  localStorage.setItem('birdiq_theme', theme);
+  updateThemeUI(theme);
+  showMessage(isLight ? '☀️ Light mode' : '🌙 Dark mode');
+}
+document.getElementById('themeToggleBtn').addEventListener('click', toggleTheme);
+
+/* BIRD DATABASE */
+const birdDatabase = {
+  "American Robin":{ name:"American Robin", scientific:"Turdus migratorius", habitat:"Woodlands, gardens, urban parks, lawns", diet:"Earthworms, insects, berries, fruits", size:"23-28 cm", wingspan:"31-41 cm", lifespan:"2-5 years", funFact:"American Robins can eat up to 14 feet of earthworms per day!", description:"The American Robin is a migratory songbird known for its cheerful 'cheerily, cheer up' song and distinctive orange-red breast." },
+  "Northern Cardinal":{ name:"Northern Cardinal", scientific:"Cardinalis cardinalis", habitat:"Woodlands, shrublands, gardens, swamps", diet:"Seeds, grains, fruits, insects", size:"21-23 cm", wingspan:"25-31 cm", lifespan:"3-5 years", funFact:"Female cardinals sing while on the nest to communicate with males!", description:"A striking bird with brilliant red plumage (males) and a distinctive crest. Year-round residents of North America." },
+  "Blue Jay":{ name:"Blue Jay", scientific:"Cyanocitta cristata", habitat:"Forests, parks, suburban areas, oak trees", diet:"Acorns, nuts, seeds, insects, eggs", size:"25-30 cm", wingspan:"34-43 cm", lifespan:"7-10 years", funFact:"Blue Jays can mimic the calls of hawks to scare away other birds!", description:"Blue Jays are intelligent, vocal birds with striking blue, white, and black plumage." },
+  "Bald Eagle":{ name:"Bald Eagle", scientific:"Haliaeetus leucocephalus", habitat:"Near water bodies, coasts, lakes, rivers", diet:"Fish, waterfowl, carrion, small mammals", size:"70-102 cm", wingspan:"180-230 cm", lifespan:"20-30 years", funFact:"Bald Eagles build the largest nests of any North American bird, weighing up to 2 tons!", description:"The national symbol of the United States. Adults have distinctive white heads and tails." },
+  "Hummingbird":{ name:"Ruby-throated Hummingbird", scientific:"Archilochus colubris", habitat:"Gardens, woodlands, meadows", diet:"Nectar, small insects, tree sap", size:"7-9 cm", wingspan:"8-11 cm", lifespan:"3-5 years", funFact:"Hummingbirds can fly backwards and their wings beat up to 80 times per second!", description:"The only hummingbird species that breeds in eastern North America. Males have a brilliant ruby-red throat." },
+  "Woodpecker":{ name:"Pileated Woodpecker", scientific:"Dryocopus pileatus", habitat:"Mature forests, woodlands, dead trees", diet:"Carpenter ants, beetles, fruits, nuts", size:"40-49 cm", wingspan:"66-75 cm", lifespan:"9-12 years", funFact:"The Pileated Woodpecker's drumming can be heard over half a mile away!", description:"One of the largest woodpeckers in North America, known for its dramatic red crest." },
+  "Sparrow":{ name:"House Sparrow", scientific:"Passer domesticus", habitat:"Urban areas, farms, parks, gardens", diet:"Seeds, grains, insects, scraps", size:"14-18 cm", wingspan:"19-25 cm", lifespan:"3-5 years", funFact:"House Sparrows are one of the most widely distributed wild birds on Earth!", description:"A small, adaptable bird found throughout the world. Males have distinctive black bibs and gray crowns." },
+  "Crow":{ name:"American Crow", scientific:"Corvus brachyrhynchos", habitat:"Woodlands, fields, urban areas, coasts", diet:"Insects, seeds, fruits, carrion, eggs", size:"40-53 cm", wingspan:"85-100 cm", lifespan:"7-8 years", funFact:"Crows are among the most intelligent birds, capable of using tools and recognizing human faces!", description:"A large, all-black bird known for its intelligence and loud 'caw' call." },
+  "Duck":{ name:"Mallard Duck", scientific:"Anas platyrhynchos", habitat:"Wetlands, ponds, lakes, rivers, marshes", diet:"Plants, insects, small fish, grains", size:"50-65 cm", wingspan:"81-98 cm", lifespan:"5-10 years", funFact:"Mallards are the ancestors of almost all domestic duck breeds!", description:"The Mallard is a dabbling duck with a distinctive iridescent green head (males) and mottled brown body." },
+  "Owl":{ name:"Great Horned Owl", scientific:"Bubo virginianus", habitat:"Forests, deserts, mountains, urban areas", diet:"Mammals, birds, reptiles, insects", size:"46-63 cm", wingspan:"101-145 cm", lifespan:"13-15 years", funFact:"Great Horned Owls have powerful talons that exert 500 PSI of crushing force!", description:"A powerful nocturnal predator with distinctive ear tufts. Known for its deep hooting call." },
+  "Peacock":{ name:"Peacock", scientific:"Pavo cristatus", habitat:"Forests, farmland, near villages", diet:"Seeds, insects, small reptiles", size:"100-115 cm", wingspan:"130-160 cm", lifespan:"15-20 years", funFact:"Peacocks display their colorful tail feathers to attract mates.", description:"Known for its vibrant blue body and spectacular tail feathers with eye-like patterns." },
+  "Penguin":{ name:"Penguin", scientific:"Spheniscidae", habitat:"Antarctica, coastal regions", diet:"Fish, squid, krill", size:"40-115 cm", wingspan:"Flippers", lifespan:"15-20 years", funFact:"Penguins cannot fly but are excellent swimmers.", description:"Flightless birds adapted to life in water, known for their black and white coloring." },
+  "Pigeon":{ name:"Pigeon", scientific:"Columba livia", habitat:"Cities, cliffs, buildings", diet:"Seeds, grains, scraps", size:"30-35 cm", wingspan:"60-70 cm", lifespan:"3-6 years", funFact:"Pigeons can recognize themselves in mirrors.", description:"Common urban birds known for their adaptability and homing ability." },
+  "Parrot":{ name:"Parrot", scientific:"Psittaciformes", habitat:"Tropical forests", diet:"Fruits, nuts, seeds", size:"8-100 cm", wingspan:"Varies", lifespan:"20-80 years", funFact:"Parrots can mimic human speech.", description:"Colorful, intelligent birds with strong curved beaks." },
+  "Flamingo":{ name:"Flamingo", scientific:"Phoenicopterus", habitat:"Salt lakes, lagoons", diet:"Algae, shrimp, brine flies", size:"90-145 cm", wingspan:"95-100 cm", lifespan:"20-30 years", funFact:"Flamingos are pink because of carotenoids in their food!", description:"Tall wading birds with distinctive pink plumage and long legs." },
+  "Toucan":{ name:"Toucan", scientific:"Ramphastidae", habitat:"Tropical forests", diet:"Fruits, insects, small animals", size:"55-65 cm", wingspan:"50-60 cm", lifespan:"20 years", funFact:"A Toucan's beak can be up to half the length of its body!", description:"Known for their oversized colorful beaks, toucans are tropical rainforest birds." },
+  "Painted Bunting":{ name:"Painted Bunting", scientific:"Passerina ciris", habitat:"Shrubs, woodlands", diet:"Seeds, insects", size:"12-14 cm", wingspan:"20-23 cm", lifespan:"5-8 years", funFact:"Considered one of the most colorful birds in North America.", description:"A brightly colored bird with blue, green, and red feathers." },
+  "Baltimore Oriole":{ name:"Baltimore Oriole", scientific:"Icterus galbula", habitat:"Open woodlands", diet:"Insects, nectar, fruits", size:"17-22 cm", wingspan:"23-32 cm", lifespan:"6-10 years", funFact:"Baltimore Orioles build hanging pouch nests from plant fibers!", description:"A bright orange and black bird known for its intricate nest-building." },
+  "American Goldfinch":{ name:"American Goldfinch", scientific:"Spinus tristis", habitat:"Fields, gardens", diet:"Seeds", size:"11-13 cm", wingspan:"19-22 cm", lifespan:"5-10 years", funFact:"American Goldfinches change color seasonally!", description:"A bright yellow bird often seen at feeders, known for its bouncing flight." },
+  "Common Raven":{ name:"Common Raven", scientific:"Corvus corax", habitat:"Mountains, forests, tundra", diet:"Omnivorous", size:"56-69 cm", wingspan:"115-150 cm", lifespan:"10-15 years", funFact:"Ravens are one of the smartest birds, able to plan and deceive!", description:"Large black birds revered in cultures worldwide for their intelligence." },
+  "Osprey":{ name:"Osprey", scientific:"Pandion haliaetus", habitat:"Near water — lakes, rivers, coasts", diet:"Fish", size:"55-58 cm", wingspan:"145-180 cm", lifespan:"7-10 years", funFact:"Ospreys can reverse an outer toe to grip fish with two toes on each side!", description:"A specialist fish-hunter found on every continent except Antarctica." },
+  "Scarlet Tanager":{ name:"Scarlet Tanager", scientific:"Piranga olivacea", habitat:"Deciduous forests", diet:"Insects, fruits", size:"16-19 cm", wingspan:"25-30 cm", lifespan:"7-10 years", funFact:"Male Scarlet Tanagers turn yellow-green in winter — almost unrecognizable!", description:"A flame-red bird with jet-black wings, often hidden in the forest canopy." },
+  "Downy Woodpecker":{ name:"Downy Woodpecker", scientific:"Dryobates pubescens", habitat:"Forests, gardens", diet:"Insects, berries, seeds", size:"14-18 cm", wingspan:"25-31 cm", lifespan:"4-8 years", funFact:"North America's smallest woodpecker — but its tongue wraps around its skull!", description:"Bold black-and-white patterning makes this a favourite at backyard feeders." },
+  "Barn Swallow":{ name:"Barn Swallow", scientific:"Hirundo rustica", habitat:"Open farmland, near water", diet:"Flying insects", size:"15-19 cm", wingspan:"32-34 cm", lifespan:"4-8 years", funFact:"Barn Swallows catch all food in mid-air — they almost never land to eat!", description:"The world's most widespread swallow with a deeply forked tail." },
+  "Yellow Warbler":{ name:"Yellow Warbler", scientific:"Setophaga petechia", habitat:"Shrubs, wetlands", diet:"Insects", size:"10-12 cm", wingspan:"16-20 cm", lifespan:"5-8 years", funFact:"Males sing a 'sweet sweet sweet I'm so sweet' song!", description:"A bright yellow bird often seen near water singing from shrubs." },
+  "Red-winged Blackbird":{ name:"Red-winged Blackbird", scientific:"Agelaius phoeniceus", habitat:"Wetlands, marshes", diet:"Seeds, insects", size:"17-23 cm", wingspan:"30-40 cm", lifespan:"5-10 years", funFact:"Males have red and yellow shoulder patches used in territorial displays.", description:"A black bird known for its bold red markings, common in marshes." },
+  "Northern Flicker":{ name:"Northern Flicker", scientific:"Colaptes auratus", habitat:"Woodlands, urban areas", diet:"Ants, insects", size:"28-36 cm", wingspan:"42-51 cm", lifespan:"6-9 years", funFact:"One of the few woodpeckers that feeds on the ground regularly.", description:"A brown woodpecker with black spots and a distinctive undulating flight." },
+  "Belted Kingfisher":{ name:"Belted Kingfisher", scientific:"Megaceryle alcyon", habitat:"Rivers, lakes", diet:"Fish", size:"28-35 cm", wingspan:"48-58 cm", lifespan:"6-10 years", funFact:"Kingfishers dive headfirst into water at up to 40 km/h to catch fish!", description:"A blue-gray bird with a shaggy crest, always found near water." },
+  "Brown Pelican":{ name:"Brown Pelican", scientific:"Pelecanus occidentalis", habitat:"Coastal waters", diet:"Fish", size:"100-137 cm", wingspan:"200-230 cm", lifespan:"10-25 years", funFact:"Brown Pelicans dive from heights of 20m to catch fish!", description:"A large seabird with a distinctive throat pouch used to scoop fish." },
+  "Indigo Bunting":{ name:"Indigo Bunting", scientific:"Passerina cyanea", habitat:"Fields, forests", diet:"Seeds, insects", size:"11-13 cm", wingspan:"18-22 cm", lifespan:"5-10 years", funFact:"Male Indigo Buntings appear brilliant blue — but it's actually structural colour!", description:"A small vibrant blue bird that navigates by stars during migration." },
+  "House Wren":{ name:"House Wren", scientific:"Troglodytes aedon", habitat:"Gardens, woodlands", diet:"Insects", size:"11-13 cm", wingspan:"15-18 cm", lifespan:"3-6 years", funFact:"House Wrens are very loud for their tiny size!", description:"A small brown bird with a big personality and a remarkably loud song." },
+  "Mallard":{ name:"Mallard", scientific:"Anas platyrhynchos", habitat:"Ponds, lakes, rivers", diet:"Plants, insects", size:"50-65 cm", wingspan:"80-98 cm", lifespan:"5-10 years", funFact:"Male Mallards have iridescent green heads that can appear black in shade.", description:"The world's most familiar duck, ancestor of almost all domestic ducks." },
+  "Scissor-tailed Flycatcher":{ name:"Scissor-tailed Flycatcher", scientific:"Tyrannus forficatus", habitat:"Grasslands, open country", diet:"Insects", size:"37-41 cm", wingspan:"38-40 cm", lifespan:"5-10 years", funFact:"Has extremely long forked tail feathers used in aerial courtship displays!", description:"A graceful bird known for its spectacular long tail and acrobatic flight." },
+  "Acadian Flycatcher":{ name:"Acadian Flycatcher", scientific:"Empidonax virescens", habitat:"Forests", diet:"Insects", size:"13-15 cm", wingspan:"20-25 cm", lifespan:"5-8 years", funFact:"Acadian Flycatchers are very quick insect hunters.", description:"A small greenish flycatcher that snaps insects from the air." }
+};
+
+function getBirdInfo(birdName) {
+  if (birdDatabase[birdName]) return birdDatabase[birdName];
+  const l = birdName.toLowerCase();
+  for (let key in birdDatabase)
+    if (l.includes(key.toLowerCase()) || key.toLowerCase().includes(l)) return birdDatabase[key];
+  return { name:birdName, scientific:"Species in classification", habitat:"Various habitats", diet:"Insects, seeds, fruits", size:"Varies", wingspan:"Varies", lifespan:"2-20 years", funFact:"There are over 10,000 bird species worldwide!", description:`${birdName} is a fascinating bird species.` };
+}
+
+/* CORE APP */
+const API_KEY = "HgsEGul7X6mHuVO4yPJv";
+const MODEL_URL = "https://serverless.roboflow.com/bird-classifications/2";
+let currentImage = null, mediaStream = null;
+
+const uploadArea   = document.getElementById('uploadArea');
+const imageInput   = document.getElementById('imageInput');
+const cameraBtn    = document.getElementById('cameraBtn');
+const urlBtn       = document.getElementById('urlBtn');
+const video        = document.getElementById('video');
+const captureBtn   = document.getElementById('captureBtn');
+const imagePreview = document.getElementById('imagePreview');
+const analyzeBtn   = document.getElementById('analyzeBtn');
+const clearBtn     = document.getElementById('clearBtn');
+const loadingDiv   = document.getElementById('loading');
+const resultsSection  = document.getElementById('resultsSection');
+const predictionsGrid = document.getElementById('predictionsGrid');
+
+function openLoginModal()  { document.getElementById('loginModal').style.display = 'flex'; }
+function closeLoginModal() { document.getElementById('loginModal').style.display = 'none'; }
+
+function showBirdDetail(birdName) {
+  const bird = getBirdInfo(birdName);
+  document.getElementById('modalBirdName').innerHTML = `${bird.name} <span style="font-size:.85rem;color:var(--mint);font-family:var(--font-body);font-style:italic">${bird.scientific}</span>`;
+  const imgContainer = document.getElementById('modalBirdImage');
+  if (currentImage) imgContainer.innerHTML = `<img src="${currentImage}" alt="Your uploaded ${bird.name}">`;
+  else imgContainer.innerHTML = `<span class="placeholder-icon">🦜</span>`;
+  document.getElementById('modalBirdTags').innerHTML =
+    `<span class="bird-info-tag"><i class="fas fa-ruler"></i> ${bird.size}</span>
+     <span class="bird-info-tag"><i class="fas fa-tree"></i> ${bird.habitat.split(',')[0].trim()}</span>
+     <span class="bird-info-tag"><i class="fas fa-utensils"></i> ${bird.diet.split(',')[0].trim()}</span>`;
+  document.getElementById('modalBirdDescription').innerHTML = bird.description;
+  document.getElementById('modalBirdDetails').innerHTML =
+    `<div class="bird-detail-item"><strong><i class="fas fa-ruler-combined"></i> Size</strong>${bird.size}</div>
+     <div class="bird-detail-item"><strong><i class="fas fa-expand-alt"></i> Wingspan</strong>${bird.wingspan}</div>
+     <div class="bird-detail-item"><strong><i class="fas fa-leaf"></i> Habitat</strong>${bird.habitat}</div>
+     <div class="bird-detail-item"><strong><i class="fas fa-apple-alt"></i> Diet</strong>${bird.diet}</div>
+     <div class="bird-detail-item"><strong><i class="fas fa-clock"></i> Lifespan</strong>${bird.lifespan}</div>
+     <div class="bird-detail-item"><strong><i class="fas fa-star"></i> Fun Fact</strong>${bird.funFact}</div>`;
+  document.getElementById('birdDetailModal').style.display = 'flex';
+}
+
+function closeBirdModal() { document.getElementById('birdDetailModal').style.display = 'none'; }
+
+function handleFile(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    currentImage = e.target.result;
+    imagePreview.src = currentImage;
+    imagePreview.style.display = 'block';
+    if (video.style.display === 'block') stopCamera();
+    video.style.display = 'none';
+    captureBtn.style.display = 'none';
+    analyzeBtn.disabled = false;
+    resultsSection.style.display = 'none';
+    showMessage('✅ Image loaded! Click "Identify Species"');
+  };
+  reader.readAsDataURL(file);
+}
+
+async function handleUrlUpload() {
+  const url = prompt('Enter Image URL:');
+  if (!url) return;
+  try {
+    const res  = await fetch(url);
+    const blob = await res.blob();
+    handleFile(blob);
+  } catch { showMessage('Invalid URL or CORS error', true); }
+}
+
+async function startCamera() {
+  try {
+    if (mediaStream) stopCamera();
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+    mediaStream = stream;
+    video.srcObject = stream;
+    video.style.display = 'block';
+    captureBtn.style.display = 'inline-flex';
+    imagePreview.style.display = 'none';
+    analyzeBtn.disabled = true;
+    showMessage('📷 Camera active — press Capture');
+  } catch { showMessage('Camera permission denied', true); }
+}
+
+function stopCamera() {
+  if (mediaStream) { mediaStream.getTracks().forEach(t => t.stop()); mediaStream = null; }
+  video.srcObject = null;
+}
+
+function capturePhoto() {
+  if (!video.videoWidth) return;
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+  currentImage = canvas.toDataURL('image/jpeg', 0.9);
+  imagePreview.src = currentImage;
+  imagePreview.style.display = 'block';
+  analyzeBtn.disabled = false;
+  stopCamera();
+  video.style.display = 'none';
+  captureBtn.style.display = 'none';
+  showMessage('📸 Photo captured! Click Identify Species');
+}
+
+const LOADING_MSGS = [
+  'Analyzing feathers & patterns…',
+  'Consulting the avian database…',
+  'Cross-referencing beak morphology…',
+  'Scanning plumage colors…',
+  'Running neural classification…',
+];
+
+async function analyzeImage() {
+  if (!currentImage) return;
+  loadingDiv.style.display = 'block';
+  loadingDiv.querySelector('p').textContent = LOADING_MSGS[Math.floor(Math.random()*LOADING_MSGS.length)];
+  analyzeBtn.disabled = true;
+  predictionsGrid.innerHTML = '';
+  resultsSection.style.display = 'none';
+  try {
+    const base64 = currentImage.split(',')[1];
+    const res = await fetch(MODEL_URL + '?api_key=' + API_KEY, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: base64
+    });
+    const data = await res.json();
+    displayResults(data);
+  } catch (err) {
+    console.error(err);
+    showMessage('Analysis failed. Please try again.', true);
+  }
+  loadingDiv.style.display = 'none';
+  analyzeBtn.disabled = false;
+}
+
+function displayResults(data) {
+  predictionsGrid.innerHTML = '';
+  if (data.predictions && data.predictions.length) {
+    let hasResults = false;
+    data.predictions.forEach((p, i) => {
+      const percent = Math.round(p.confidence * 100);
+      if (percent < 20) return;
+      hasResults = true;
+      const birdName = p.class;
+      const barColor = percent >= 70 ? 'var(--mint)' : percent >= 40 ? 'var(--gold)' : '#ef4444';
+      const card = document.createElement('div');
+      card.className = 'prediction-card';
+      card.innerHTML = `
+        <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem">
+          <span style="font-size:1.1rem">${i===0?'🥇':i===1?'🥈':'🥉'}</span>
+          <b>${escapeHtml(birdName)}</b>
+          ${i===0?'<span style="margin-left:auto;font-size:.7rem;background:rgba(82,180,137,.15);border:1px solid rgba(82,180,137,.25);border-radius:100px;padding:.2rem .6rem;color:var(--mint)">Best Match</span>':''}
+        </div>
+        <div class="confidence-bar"><div class="confidence-fill" style="background:${barColor}" data-w="${percent}"></div></div>
+        <span style="font-size:.78rem;color:var(--ink3)">${percent}% confidence — click for full species profile</span>`;
+      card.onclick = () => showBirdDetail(birdName);
+      predictionsGrid.appendChild(card);
+      setTimeout(() => { card.querySelector('.confidence-fill').style.width = percent + '%' }, 50 + i*100);
+      if (currentUser && currentImage) addToHistory(birdName, percent, currentImage);
+    });
+    if (hasResults) {
+      resultsSection.style.display = 'block';
+      showMessage('✅ Species identified! Click any card for details.');
+    } else {
+      predictionsGrid.innerHTML = "<p style='padding:1rem;text-align:center;color:var(--ink3)'>⚠️ Low confidence — try a clearer image.</p>";
+      resultsSection.style.display = 'block';
+    }
+  } else {
+    predictionsGrid.innerHTML = "<p style='padding:1rem;text-align:center;color:var(--ink3)'>❌ No bird detected. Try a different image.</p>";
+    resultsSection.style.display = 'block';
+  }
+}
+
+function clearAll() {
+  stopCamera();
+  currentImage = null;
+  imagePreview.style.display = 'none'; imagePreview.src = '';
+  video.style.display = 'none';
+  captureBtn.style.display = 'none';
+  analyzeBtn.disabled = true;
+  resultsSection.style.display = 'none';
+  predictionsGrid.innerHTML = '';
+  showMessage('Cleared — upload a new image.');
+}
+
+function showMessage(msg, isError = false) {
+  const m = document.createElement('div');
+  m.className = 'message' + (isError ? ' error' : '');
+  m.innerHTML = `<i class="fas ${isError ? 'fa-triangle-exclamation' : 'fa-check-circle'}" style="color:${isError?'#ef4444':'var(--mint)'}"></i> ${msg}`;
+  document.body.appendChild(m);
+  setTimeout(() => { m.style.opacity='0'; m.style.transform='translateX(20px)'; m.style.transition='all .3s'; setTimeout(()=>m.remove(),320) }, 3800);
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+/* EVENT LISTENERS */
+uploadArea.onclick = () => imageInput.click();
+imageInput.onchange = e => { if (e.target.files[0]) handleFile(e.target.files[0]); e.target.value = ''; };
+urlBtn.onclick = handleUrlUpload;
+cameraBtn.onclick = startCamera;
+captureBtn.onclick = capturePhoto;
+analyzeBtn.onclick = analyzeImage;
+clearBtn.onclick = clearAll;
+
+/* Drag & drop */
+uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('dragover') });
+['dragleave','dragend'].forEach(ev => uploadArea.addEventListener(ev, () => uploadArea.classList.remove('dragover')));
+uploadArea.addEventListener('drop', e => { e.preventDefault(); uploadArea.classList.remove('dragover'); if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]) });
+
+/* Modal close on backdrop */
+window.onclick = e => {
+  if (e.target === document.getElementById('birdDetailModal')) closeBirdModal();
+  if (e.target === document.getElementById('loginModal')) closeLoginModal();
+};
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeBirdModal(); } });
+
+/* INIT */
+initTheme();
+checkLoginAndShowModal();
+showMessage('🦉 Welcome to BirdIQ! Upload a bird photo to get started.');
+</script>
+</body>
+</html>
