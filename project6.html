@@ -1,0 +1,2221 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>BirdIQ | AI Bird Classification & Discovery Platform</title>
+    <meta name="description"
+        content="AI-powered bird species identification. Discover detailed information, images, and facts about birds you find.">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* ========== LIGHT & DARK MODE VARIABLES ========== */
+        :root {
+            /* Dark mode (default) */
+            --bg-primary: #0a0f1e;
+            --bg-secondary: rgba(15, 23, 42, 0.7);
+            --bg-card: rgba(30, 41, 59, 0.8);
+            --bg-navbar: rgba(10, 15, 30, 0.92);
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --border-light: rgba(165, 180, 252, 0.3);
+            --gradient-start: #667eea;
+            --gradient-end: #764ba2;
+            --card-hover: rgba(51, 65, 85, 0.9);
+            --input-bg: rgba(0, 0, 0, 0.4);
+            --modal-bg: linear-gradient(135deg, #1e293b, #0f172a);
+            --footer-bg: rgba(10, 15, 30, 0.9);
+            --radial-bg: radial-gradient(circle at 20% 30%, rgba(102, 126, 234, 0.3), rgba(118, 75, 162, 0.2), #0a0f1e);
+        }
+
+        body.light-mode {
+            --bg-primary: #f0f4f8;
+            --bg-secondary: rgba(255, 255, 255, 0.85);
+            --bg-card: rgba(255, 255, 255, 0.9);
+            --bg-navbar: rgba(255, 255, 255, 0.95);
+            --text-primary: #1e293b;
+            --text-secondary: #334155;
+            --text-muted: #64748b;
+            --border-color: rgba(0, 0, 0, 0.08);
+            --border-light: rgba(102, 126, 234, 0.3);
+            --gradient-start: #667eea;
+            --gradient-end: #764ba2;
+            --card-hover: rgba(241, 245, 249, 0.95);
+            --input-bg: rgba(0, 0, 0, 0.05);
+            --modal-bg: linear-gradient(135deg, #ffffff, #f1f5f9);
+            --footer-bg: rgba(255, 255, 255, 0.95);
+            --radial-bg: radial-gradient(circle at 20% 30%, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.05), #f0f4f8);
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', 'Segoe UI', sans-serif;
+            background: var(--bg-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        /* Animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--radial-bg);
+            z-index: -2;
+            transition: background 0.3s ease;
+        }
+
+        /* ========== NAVBAR ========== */
+        .navbar {
+            background: var(--bg-navbar);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            padding: 0.8rem 2rem;
+            transition: background 0.3s ease;
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .logo-nav {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .logo-nav:hover {
+            transform: scale(1.02);
+        }
+
+        .logo-nav i {
+            font-size: 36px;
+            background: linear-gradient(135deg, #a5b4fc, #c084fc);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            filter: drop-shadow(0 0 10px rgba(165, 180, 252, 0.3));
+        }
+
+        .logo-nav span {
+            font-size: 1.7rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--text-primary), #a5b4fc);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-weight: 600;
+            transition: all 0.3s;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+            padding: 0.5rem 0.8rem;
+            border-radius: 2rem;
+        }
+
+        .nav-links a:hover {
+            color: #a5b4fc;
+            background: rgba(165, 180, 252, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .login-btn-nav {
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            color: white !important;
+            padding: 8px 24px !important;
+            border-radius: 40px !important;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .login-btn-nav:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+        }
+
+        /* History button in navbar */
+        .history-nav-btn {
+            background: rgba(165, 180, 252, 0.15);
+            border: 1px solid var(--border-light);
+            border-radius: 2rem;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            transition: all 0.3s;
+        }
+
+        .history-nav-btn:hover {
+            background: rgba(165, 180, 252, 0.25);
+            transform: translateY(-2px);
+            color: #a5b4fc;
+        }
+
+        /* Theme Toggle Button */
+        .theme-toggle {
+            background: rgba(165, 180, 252, 0.15);
+            border: 1px solid var(--border-light);
+            border-radius: 2rem;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            transition: all 0.3s;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(165, 180, 252, 0.25);
+            transform: translateY(-2px);
+        }
+
+        .theme-toggle i {
+            font-size: 1rem;
+        }
+
+        /* ========== MAIN CONTENT ========== */
+        .main-content {
+            flex: 1;
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 2rem 1.8rem;
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            margin-bottom: 2.5rem;
+            padding: 2rem 1rem;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--text-primary), #a5b4fc, #c084fc);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 1rem;
+            letter-spacing: -1px;
+            animation: fadeInUp 0.6s ease;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            animation: fadeInUp 0.6s ease 0.1s backwards;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Glass Cards */
+        .upload-card,
+        .image-preview-container,
+        .results-section,
+        .about-section,
+        .history-section {
+            background: var(--bg-secondary);
+            backdrop-filter: blur(16px);
+            border-radius: 2rem;
+            padding: 1.8rem;
+            margin-top: 1.5rem;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s;
+        }
+
+        .upload-card h3,
+        .image-preview-container h3,
+        .results-section h3,
+        .about-section h3,
+        .history-section h3 {
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .upload-area {
+            border: 2px dashed rgba(165, 180, 252, 0.4);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.25s;
+            background: var(--input-bg);
+        }
+
+        .upload-area:hover {
+            background: rgba(102, 126, 234, 0.15);
+            border-color: #a5b4fc;
+        }
+
+        .extra-upload-options {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1.2rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.7rem 1.6rem;
+            border: none;
+            border-radius: 2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            color: white;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1.2rem;
+            flex-wrap: wrap;
+        }
+
+        #imagePreview,
+        #video {
+            max-width: 100%;
+            max-height: 380px;
+            border-radius: 1.2rem;
+            margin-top: 0.8rem;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            object-fit: contain;
+            background: var(--input-bg);
+        }
+
+        .loading {
+            text-align: center;
+            display: none;
+            margin: 1.5rem 0;
+            background: var(--bg-secondary);
+            backdrop-filter: blur(8px);
+            border-radius: 3rem;
+            padding: 1rem;
+            color: var(--text-primary);
+        }
+
+        /* Prediction Cards - Clickable */
+        .prediction-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--border-light);
+            padding: 1rem 1.2rem;
+            border-radius: 1.2rem;
+            margin-top: 0.8rem;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .prediction-card:hover {
+            transform: translateX(8px);
+            border-left: 4px solid #a5b4fc;
+            background: var(--card-hover);
+        }
+
+        .prediction-card b {
+            color: var(--text-primary);
+        }
+
+        .confidence-bar {
+            background: #1e293b;
+            height: 10px;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 0.6rem 0 0.3rem;
+        }
+
+        body.light-mode .confidence-bar {
+            background: #e2e8f0;
+        }
+
+        .confidence-fill {
+            background: linear-gradient(90deg, var(--gradient-start), #c084fc);
+            height: 100%;
+            width: 0%;
+            border-radius: 12px;
+            transition: width 0.5s ease;
+        }
+
+        /* History item cards */
+        .history-item {
+            background: var(--bg-card);
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--border-light);
+            border-radius: 1.2rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+        }
+
+        .history-item:hover {
+            background: var(--card-hover);
+            transform: scale(0.98);
+        }
+
+        .history-info {
+            flex: 1;
+        }
+
+        .history-bird {
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .history-date {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .history-clear-btn {
+            background: rgba(239, 68, 68, 0.2);
+            border: none;
+            padding: 0.4rem 1rem;
+            border-radius: 2rem;
+            color: #ef4444;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .history-clear-btn:hover {
+            background: rgba(239, 68, 68, 0.4);
+        }
+
+        .clear-all-history {
+            background: rgba(239, 68, 68, 0.3);
+            margin-bottom: 1rem;
+            border: none;
+        }
+
+        /* ========== BIRD DETAIL MODAL ========== */
+        .bird-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(12px);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .bird-modal-content {
+            background: var(--modal-bg);
+            border-radius: 2rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            position: relative;
+            border: 1px solid var(--border-light);
+            animation: modalFadeIn 0.3s ease;
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .bird-modal-header {
+            padding: 1.5rem 1.8rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .bird-modal-header h2 {
+            color: var(--text-primary);
+            font-size: 1.4rem;
+        }
+
+        .close-bird-modal {
+            font-size: 2rem;
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: all 0.2s;
+        }
+
+        .close-bird-modal:hover {
+            color: var(--text-primary);
+            transform: scale(1.1);
+        }
+
+        .bird-modal-body {
+            padding: 1.8rem;
+        }
+
+        .bird-image {
+            width: 100%;
+            height: 260px;
+            background: linear-gradient(135deg, #2d3a5e, #1a2744);
+            border-radius: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+
+        body.light-mode .bird-image {
+            background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
+        }
+
+        .bird-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: var(--input-bg);
+        }
+
+        .bird-image .placeholder-icon {
+            font-size: 4rem;
+            color: #a5b4fc;
+        }
+
+        .bird-info-row {
+            display: flex;
+            gap: 0.8rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .bird-info-tag {
+            background: rgba(102, 126, 234, 0.2);
+            padding: 0.4rem 1rem;
+            border-radius: 2rem;
+            font-size: 0.8rem;
+            color: #a5b4fc;
+        }
+
+        .bird-description-full {
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin: 1rem 0;
+        }
+
+        .bird-detail-item {
+            margin: 0.8rem 0;
+            padding: 0.6rem;
+            background: var(--input-bg);
+            border-radius: 1rem;
+        }
+
+        .bird-detail-item strong {
+            color: #a5b4fc;
+        }
+
+        .bird-detail-item {
+            color: var(--text-secondary);
+        }
+
+        /* ========== FOOTER ========== */
+        .footer {
+            background: var(--footer-bg);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid var(--border-color);
+            padding: 2rem 2rem 1rem;
+            margin-top: 3rem;
+            transition: background 0.3s ease;
+        }
+
+        .footer-container {
+            max-width: 1300px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .footer-section h4 {
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .footer-section p,
+        .footer-section a {
+            color: var(--text-muted);
+            line-height: 1.8;
+            text-decoration: none;
+            display: block;
+            transition: color 0.2s;
+        }
+
+        .footer-section a:hover {
+            color: #a5b4fc;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .social-links a {
+            font-size: 1.3rem;
+            display: inline-block;
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 2rem;
+            margin-top: 2rem;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .message {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            color: var(--text-primary);
+            padding: 0.8rem 1.5rem;
+            border-radius: 40px;
+            z-index: 1000;
+            border-left: 4px solid #a5b4fc;
+            animation: slideIn 0.25s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .hidden-section {
+            display: none;
+        }
+
+        .active-section {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .nav-container {
+                flex-direction: column;
+            }
+
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+
+            .footer-container {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .social-links {
+                justify-content: center;
+            }
+
+            .theme-toggle span {
+                display: none;
+            }
+
+            .theme-toggle {
+                padding: 0.5rem 0.8rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ========== NAVBAR ========== -->
+    <div class="navbar">
+        <div class="nav-container">
+            <div class="logo-nav" onclick="showSection('home')">
+                <i class="fas fa-dove"></i>
+                <span>BirdIQ</span>
+            </div>
+            <div class="nav-links">
+                <a onclick="showSection('home')" id="navHome"><i class="fas fa-home"></i> Home</a>
+                <a onclick="showSection('about')" id="navAbout"><i class="fas fa-info-circle"></i> About</a>
+                <a onclick="showSection('history')" id="navHistory"><i class="fas fa-history"></i> History</a>
+                <button class="theme-toggle" id="themeToggleBtn">
+                    <i class="fas fa-moon" id="themeIcon"></i>
+                    <span id="themeText">Dark</span>
+                </button>
+                <a id="authButton" onclick="handleAuthClick()" class="login-btn-nav"><i class="fas fa-user"></i> <span
+                        id="authText">Login / Sign Up</span></a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== LOGIN MODAL ========== -->
+    <div id="loginModal" class="bird-modal">
+        <div class="bird-modal-content" style="max-width:420px">
+            <div class="bird-modal-header">
+                <h2><i class="fas fa-sign-in-alt"></i> Welcome to BirdIQ</h2>
+                <span class="close-bird-modal" onclick="closeLoginModal()">&times;</span>
+            </div>
+
+            <div class="bird-modal-body">
+
+                <div style="text-align: center; margin-bottom: 1.5rem;">
+                    <i class="fas fa-dove" style="font-size: 3rem; color: #a5b4fc;"></i>
+                    <p style="color: var(--text-muted); margin-top: 0.5rem;">
+                        Sign in to save your bird discoveries
+                    </p>
+                </div>
+
+                <!-- ✅ Email Input -->
+                <input type="email" id="loginEmail" placeholder="Email address" required
+                    style="width:100%; padding:14px; margin:10px 0; background:var(--input-bg); border:1px solid var(--border-light); border-radius:1rem; color:var(--text-primary); font-size:1rem;">
+
+                <!-- ✅ Password Input -->
+                <input type="password" id="loginPassword" placeholder="Password" required
+                    style="width:100%; padding:14px; margin:10px 0; background:var(--input-bg); border:1px solid var(--border-light); border-radius:1rem; color:var(--text-primary); font-size:1rem;">
+
+                <!-- ✅ Login Button -->
+                <button class="btn btn-primary" style="width:100%; margin-top:10px;" onclick="handleLogin()">
+                    <i class="fas fa-arrow-right"></i> Login
+                </button>
+
+                <!-- ✅ NEW: Register Button (IMPORTANT for DB storing) -->
+                <button class="btn" style="width:100%; margin-top:10px; background:#22c55e; color:white;"
+                    onclick="register()">
+                    Register
+                </button>
+
+                <p style="margin-top:15px; text-align:center; font-size:0.8rem; color:var(--text-muted);">
+                    Create account first → then login
+                </p>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== BIRD DETAIL MODAL ========== -->
+    <div id="birdDetailModal" class="bird-modal">
+        <div class="bird-modal-content">
+            <div class="bird-modal-header">
+                <h2 id="modalBirdName">Bird Name</h2>
+                <span class="close-bird-modal" onclick="closeBirdModal()">&times;</span>
+            </div>
+            <div class="bird-modal-body">
+                <div class="bird-image" id="modalBirdImage">
+                    <i class="fas fa-dove placeholder-icon"></i>
+                </div>
+                <div class="bird-info-row" id="modalBirdTags"></div>
+                <div class="bird-description-full" id="modalBirdDescription"></div>
+                <div id="modalBirdDetails"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== MAIN CONTENT ========== -->
+    <div class="main-content">
+        <!-- Home Section -->
+        <div id="homeSection" class="active-section">
+            <div class="container">
+                <div class="hero">
+                    <h1>🦜 Identify Any Bird Instantly</h1>
+                    <p>Upload a photo or use your camera — click on any discovered bird for detailed info & your
+                        uploaded image!</p>
+                </div>
+
+                <div class="upload-card">
+                    <h3><i class="fas fa-cloud-upload-alt"></i> Upload Bird Image</h3>
+                    <div class="upload-area" id="uploadArea">
+                        <i class="fas fa-cloud-upload-alt fa-2x"></i>
+                        <p>Click or Drag & Drop Image</p>
+                        <input type="file" id="imageInput" accept="image/*" hidden>
+                    </div>
+                    <div class="extra-upload-options">
+                        <button class="btn btn-secondary" id="cameraBtn"><i class="fas fa-camera"></i> Open
+                            Camera</button>
+                        <button class="btn btn-secondary" id="urlBtn"><i class="fas fa-link"></i> Image URL</button>
+                    </div>
+                </div>
+
+                <div class="image-preview-container">
+                    <h3><i class="fas fa-eye"></i> Preview</h3>
+                    <video id="video" autoplay playsinline></video>
+                    <img id="imagePreview">
+                    <div class="controls">
+                        <button id="captureBtn" class="btn btn-primary" style="display:none"><i
+                                class="fas fa-camera-retro"></i> Capture Photo</button>
+                        <button id="analyzeBtn" class="btn btn-primary" disabled><i class="fas fa-microchip"></i>
+                            Identify Species</button>
+                        <button id="clearBtn" class="btn btn-secondary"><i class="fas fa-trash-alt"></i> Clear</button>
+                    </div>
+                </div>
+
+                <div class="loading" id="loading">
+                    <p>🧠 AI analyzing feathers & patterns...</p>
+                </div>
+
+                <div class="results-section" id="resultsSection" style="display:none">
+                    <h3><i class="fas fa-chart-line"></i> Discovered Birds <i class="fas fa-mouse-pointer"
+                            style="font-size:0.9rem"></i> (Click any card for details)</h3>
+                    <div id="predictionsGrid"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- About Section -->
+        <div id="aboutSection" class="hidden-section">
+            <div class="container">
+                <div class="about-section">
+                    <h3><i class="fas fa-feather-alt"></i> About BirdIQ</h3>
+                    <p style="color:var(--text-secondary); line-height:1.8; margin-bottom:1rem;">BirdIQ is an AI-powered
+                        bird classification platform that helps bird enthusiasts, researchers, and nature lovers
+                        identify bird species instantly from photos.</p>
+                    <p style="color:var(--text-secondary); line-height:1.8; margin-bottom:1rem;">Our advanced AI model
+                        can recognize hundreds of bird species with high accuracy. Simply upload an image or use your
+                        camera, and our AI will analyze the feathers, beak, and patterns to identify the bird.</p>
+                    <p style="color:var(--text-secondary); line-height:1.8;">✨ Click on any discovered bird to see
+                        detailed information including habitat, diet, size, lifespan, and fun facts along with YOUR
+                        uploaded bird photo!</p>
+                    <div style="margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <div
+                            style="background: rgba(102,126,234,0.2); padding: 1rem; border-radius: 1rem; flex:1; text-align:center;">
+                            <i class="fas fa-robot" style="font-size:2rem; color:#a5b4fc;"></i>
+                            <h4 style="color:var(--text-primary); margin-top:0.5rem;">AI Powered</h4>
+                            <p style="color:var(--text-muted); font-size:0.85rem;">Advanced computer vision</p>
+                        </div>
+                        <div
+                            style="background: rgba(102,126,234,0.2); padding: 1rem; border-radius: 1rem; flex:1; text-align:center;">
+                            <i class="fas fa-database" style="font-size:2rem; color:#a5b4fc;"></i>
+                            <h4 style="color:var(--text-primary); margin-top:0.5rem;">Bird Encyclopedia</h4>
+                            <p style="color:var(--text-muted); font-size:0.85rem;">Detailed species info</p>
+                        </div>
+                        <div
+                            style="background: rgba(102,126,234,0.2); padding: 1rem; border-radius: 1rem; flex:1; text-align:center;">
+                            <i class="fas fa-camera" style="font-size:2rem; color:#a5b4fc;"></i>
+                            <h4 style="color:var(--text-primary); margin-top:0.5rem;">Live Camera</h4>
+                            <p style="color:var(--text-muted); font-size:0.85rem;">Capture & identify instantly</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Section -->
+        <div id="historySection" class="hidden-section">
+            <div class="container">
+                <div class="history-section">
+                    <h3><i class="fas fa-clock"></i> My Bird Discovery History</h3>
+                    <div id="historyListContainer">
+                        <p style="color:var(--text-muted); text-align:center;">No history yet. Identify birds to see
+                            them here!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== FOOTER ========== -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-section">
+                <h4><i class="fas fa-dove"></i> BirdIQ</h4>
+                <p>AI-powered bird identification platform helping nature lovers discover and learn about birds
+                    worldwide.</p>
+            </div>
+            <div class="footer-section">
+                <h4>Quick Links</h4>
+                <a onclick="showSection('home')">🏠 Home</a>
+                <a onclick="showSection('about')">ℹ️ About Us</a>
+                <a onclick="showSection('history')">📜 History</a>
+                <a id="footerAuthLink" onclick="handleAuthClick()">🔐 Login / Sign Up</a>
+            </div>
+            <div class="footer-section">
+                <h4>Contact</h4>
+                <p><i class="fas fa-envelope"></i> hello@birdiq.ai</p>
+                <p><i class="fas fa-globe"></i> www.birdiq.ai</p>
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-github"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2025 BirdIQ — AI Bird Classification | Protecting avian diversity with technology</p>
+        </div>
+    </footer>
+
+    <script>
+        /* ========== PERSISTENT LOGIN & HISTORY ========== */
+        async function handleLogin() {
+            const email = document.getElementById("loginEmail").value.trim();
+            const password = document.getElementById("loginPassword").value.trim();
+
+            if (!email || !password) {
+                alert("Enter email & password");
+                return;
+            }
+
+            const res = await fetch("http://localhost:3000/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password })
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                alert("Login Successful ✅");
+                localStorage.setItem("birdiq_current_user", email);
+                closeLoginModal();
+            } else {
+                alert(data.message || "Login failed ❌");
+            }
+        }
+
+        // ✅ REGISTER FUNCTION (IMPORTANT)
+        let currentUser = null;
+        let userHistories = JSON.parse(localStorage.getItem('birdiq_histories') || '{}');
+
+        function saveHistories() { localStorage.setItem('birdiq_histories', JSON.stringify(userHistories)); }
+
+        function addToHistory(birdName, confidence, imageDataUrl) {
+            if (!currentUser) return;
+            if (!userHistories[currentUser]) userHistories[currentUser] = [];
+            const entry = { birdName, confidence, imageDataUrl, timestamp: new Date().toISOString() };
+            userHistories[currentUser].unshift(entry);
+            if (userHistories[currentUser].length > 50) userHistories[currentUser].pop();
+            saveHistories();
+            if (document.getElementById('historySection').classList.contains('active-section')) renderHistory();
+        }
+        function renderHistory() {
+            const container = document.getElementById('historyListContainer');
+            if (!container) return;
+            if (!currentUser || !userHistories[currentUser] || userHistories[currentUser].length === 0) {
+                container.innerHTML = '<p style="color:var(--text-muted); text-align:center;">No history yet. Identify birds to see them here!</p>';
+                return;
+            }
+            let html = `<button class="btn btn-secondary clear-all-history" onclick="clearAllHistory()"><i class="fas fa-trash"></i> Clear All History</button>`;
+            userHistories[currentUser].forEach((item, idx) => {
+                const date = new Date(item.timestamp).toLocaleString();
+                html += `
+            <div class="history-item" onclick="restoreFromHistory(${idx})">
+                <div class="history-info">
+                    <div class="history-bird">🐦 ${escapeHtml(item.birdName)} (${item.confidence}% confidence)</div>
+                    <div class="history-date">${date}</div>
+                </div>
+                <button class="history-clear-btn" onclick="event.stopPropagation(); deleteHistoryEntry(${idx})"><i class="fas fa-trash-alt"></i> Remove</button>
+            </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function restoreFromHistory(idx) {
+            if (!currentUser || !userHistories[currentUser] || !userHistories[currentUser][idx]) return;
+            const entry = userHistories[currentUser][idx];
+            currentImage = entry.imageDataUrl;
+            imagePreview.src = currentImage;
+            imagePreview.style.display = "block";
+            if (video.style.display === "block") stopCamera();
+            video.style.display = "none";
+            captureBtn.style.display = "none";
+            analyzeBtn.disabled = false;
+            resultsSection.style.display = "none";
+            showMessage(`✅ Restored identification for ${entry.birdName}. Click "Identify Species" to see results again.`);
+            showSection('home');
+        }
+
+        function deleteHistoryEntry(idx) {
+            if (!currentUser || !userHistories[currentUser]) return;
+            userHistories[currentUser].splice(idx, 1);
+            saveHistories();
+            renderHistory();
+            showMessage("Entry removed from history.");
+        }
+
+        function clearAllHistory() {
+            if (!currentUser) return;
+            userHistories[currentUser] = [];
+            saveHistories();
+            renderHistory();
+            showMessage("All history cleared.");
+        }
+
+        // Update UI based on login state
+        function updateAuthUI() {
+            const authTextSpan = document.getElementById('authText');
+            const footerAuthLink = document.getElementById('footerAuthLink');
+            if (currentUser) {
+                if (authTextSpan) authTextSpan.innerText = 'Logout';
+                if (footerAuthLink) footerAuthLink.innerHTML = '🚪 Logout';
+            } else {
+                if (authTextSpan) authTextSpan.innerText = 'Login / Sign Up';
+                if (footerAuthLink) footerAuthLink.innerHTML = '🔐 Login / Sign Up';
+            }
+        }
+
+        function handleAuthClick() {
+            if (currentUser) {
+                // Logout
+                localStorage.removeItem('birdiq_current_user');
+                currentUser = null;
+                updateAuthUI();
+                showMessage("Logged out. History is now private.");
+                if (document.getElementById('historySection').classList.contains('active-section')) renderHistory();
+            } else {
+                openLoginModal();
+            }
+        }
+
+        function checkLoginAndShowModal() {
+            const savedUser = localStorage.getItem('birdiq_current_user');
+            if (savedUser) {
+                currentUser = savedUser;
+                updateAuthUI();
+                showMessage(`Welcome back, ${currentUser.split('@')[0]}! ✨`);
+            } else {
+                setTimeout(() => { openLoginModal(); }, 300);
+            }
+        }
+
+        // ================= LOGIN =================
+        async function handleLogin() {
+            const email = document.getElementById("loginEmail").value.trim();
+            const password = document.getElementById("loginPassword").value.trim();
+
+            if (!email || !password) {
+                alert("Enter email & password");
+                return;
+            }
+
+            const res = await fetch("http://localhost:3000/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ email, password })
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                alert("Login Successful ✅");
+                localStorage.setItem("birdiq_current_user", email);
+                closeLoginModal();
+            } else {
+                alert(data.message || "Login failed ❌");
+            }
+        }
+
+
+        // ================= REGISTER =================
+        async function register() {
+            const email = document.getElementById("loginEmail").value.trim();
+            const password = document.getElementById("loginPassword").value.trim();
+
+            if (!email || !password) {
+                alert("Enter email & password");
+                return;
+            }
+
+            const res = await fetch("http://localhost:3000/register", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ email, password })
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                alert("Registered Successfully ✅\nNow Login");
+            } else {
+                alert(data.message || "Register failed ❌");
+            }
+        }
+        /* ========== LIGHT/DARK MODE & EXISTING FUNCTIONS (unchanged logic) ========== */
+        function initTheme() {
+            const savedTheme = localStorage.getItem('birdiq_theme');
+            if (savedTheme === 'light') { document.body.classList.add('light-mode'); updateThemeUI('light'); }
+            else { document.body.classList.remove('light-mode'); updateThemeUI('dark'); }
+        }
+        function updateThemeUI(theme) {
+            const themeIcon = document.getElementById('themeIcon');
+            const themeText = document.getElementById('themeText');
+            if (theme === 'light') { themeIcon.className = 'fas fa-sun'; themeText.textContent = 'Light'; }
+            else { themeIcon.className = 'fas fa-moon'; themeText.textContent = 'Dark'; }
+        }
+        function toggleTheme() {
+            if (document.body.classList.contains('light-mode')) { document.body.classList.remove('light-mode'); localStorage.setItem('birdiq_theme', 'dark'); updateThemeUI('dark'); showMessage('🌙 Dark mode activated'); }
+            else { document.body.classList.add('light-mode'); localStorage.setItem('birdiq_theme', 'light'); updateThemeUI('light'); showMessage('☀️ Light mode activated'); }
+        }
+        document.getElementById('themeToggleBtn').addEventListener('click', toggleTheme);
+
+        const birdDatabase = {
+            "American Robin": { name: "American Robin", scientific: "Turdus migratorius", habitat: "Woodlands, gardens, urban parks, lawns", diet: "Earthworms, insects, berries, fruits", size: "23-28 cm (9-11 in)", wingspan: "31-41 cm (12-16 in)", lifespan: "2-5 years", funFact: "American Robins can eat up to 14 feet of earthworms per day!", description: "The American Robin is a migratory songbird known for its cheerful 'cheerily, cheer up' song and distinctive orange-red breast. Common across North America, they are often seen hopping across lawns searching for worms." },
+            "Northern Cardinal": { name: "Northern Cardinal", scientific: "Cardinalis cardinalis", habitat: "Woodlands, shrublands, gardens, swamps", diet: "Seeds, grains, fruits, insects", size: "21-23 cm (8.3-9.1 in)", wingspan: "25-31 cm (10-12 in)", lifespan: "3-5 years", funFact: "Female cardinals sing while on the nest to communicate with males!", description: "The Northern Cardinal is a striking bird with brilliant red plumage (males) and a distinctive crest. Year-round residents of North America, they are often seen at bird feeders." },
+            "Blue Jay": { name: "Blue Jay", scientific: "Cyanocitta cristata", habitat: "Forests, parks, suburban areas, oak trees", diet: "Acorns, nuts, seeds, insects, eggs", size: "25-30 cm (9.8-11.8 in)", wingspan: "34-43 cm (13-17 in)", lifespan: "7-10 years", funFact: "Blue Jays can mimic the calls of hawks to scare away other birds!", description: "Blue Jays are intelligent, vocal birds with striking blue, white, and black plumage. Known for their complex social behaviors and loud calls." },
+            "Bald Eagle": { name: "Bald Eagle", scientific: "Haliaeetus leucocephalus", habitat: "Near water bodies, coasts, lakes, rivers", diet: "Fish, waterfowl, carrion, small mammals", size: "70-102 cm (28-40 in)", wingspan: "180-230 cm (71-91 in)", lifespan: "20-30 years", funFact: "Bald Eagles build the largest nests of any North American bird, weighing up to 2 tons!", description: "The Bald Eagle is a majestic bird of prey and the national symbol of the United States. Adults have distinctive white heads and tails." },
+            "Hummingbird": { name: "Ruby-throated Hummingbird", scientific: "Archilochus colubris", habitat: "Gardens, woodlands, meadows, flowering plants", diet: "Nectar, small insects, tree sap", size: "7-9 cm (2.8-3.5 in)", wingspan: "8-11 cm (3.1-4.3 in)", lifespan: "3-5 years", funFact: "Hummingbirds can fly backwards and their wings beat up to 80 times per second!", description: "These tiny, iridescent birds are the only hummingbird species that breeds in eastern North America. Males have a brilliant ruby-red throat." },
+            "Woodpecker": { name: "Pileated Woodpecker", scientific: "Dryocopus pileatus", habitat: "Mature forests, woodlands, dead trees", diet: "Carpenter ants, beetles, fruits, nuts", size: "40-49 cm (16-19 in)", wingspan: "66-75 cm (26-30 in)", lifespan: "9-12 years", funFact: "The Pileated Woodpecker's drumming can be heard over half a mile away!", description: "One of the largest woodpeckers in North America, known for its dramatic red crest and distinctive rectangular holes in trees." },
+            "Sparrow": { name: "House Sparrow", scientific: "Passer domesticus", habitat: "Urban areas, farms, parks, gardens", diet: "Seeds, grains, insects, scraps", size: "14-18 cm (5.5-7.1 in)", wingspan: "19-25 cm (7.5-9.8 in)", lifespan: "3-5 years", funFact: "House Sparrows are one of the most widely distributed wild birds on Earth!", description: "The House Sparrow is a small, adaptable bird found throughout the world. Males have distinctive black bibs and gray crowns." },
+            "Crow": { name: "American Crow", scientific: "Corvus brachyrhynchos", habitat: "Woodlands, fields, urban areas, coasts", diet: "Insects, seeds, fruits, carrion, eggs", size: "40-53 cm (16-21 in)", wingspan: "85-100 cm (33-39 in)", lifespan: "7-8 years", funFact: "Crows are among the most intelligent birds, capable of using tools and recognizing human faces!", description: "The American Crow is a large, all-black bird known for its intelligence and loud 'caw' call. They are highly social and often seen in flocks." },
+            "Duck": { name: "Mallard Duck", scientific: "Anas platyrhynchos", habitat: "Wetlands, ponds, lakes, rivers, marshes", diet: "Plants, insects, small fish, grains", size: "50-65 cm (20-26 in)", wingspan: "81-98 cm (32-39 in)", lifespan: "5-10 years", funFact: "Mallards are the ancestors of almost all domestic duck breeds!", description: "The Mallard is a dabbling duck with a distinctive iridescent green head (males) and mottled brown body. Found across North America and Eurasia." },
+            "Owl": { name: "Great Horned Owl", scientific: "Bubo virginianus", habitat: "Forests, deserts, mountains, urban areas", diet: "Mammals, birds, reptiles, insects", size: "46-63 cm (18-25 in)", wingspan: "101-145 cm (40-57 in)", lifespan: "13-15 years", funFact: "Great Horned Owls have powerful talons that exert 500 PSI of crushing force!", description: "The Great Horned Owl is a powerful nocturnal predator with distinctive ear tufts (horns). Known for its deep hooting call and exceptional hunting abilities." },
+            "Peacock": {
+                name: "Peacock",
+                scientific: "Pavo cristatus",
+                habitat: "Forests, farmland, near villages",
+                diet: "Seeds, insects, small reptiles",
+                size: "100-115 cm (39-45 in)",
+                wingspan: "130-160 cm (51-63 in)",
+                lifespan: "15-20 years",
+                funFact: "Peacocks display their colorful tail feathers to attract mates.",
+                description: "The peacock is known for its vibrant blue body and spectacular tail feathers with eye-like patterns."
+            },
+
+            "Penguin": {
+                name: "Penguin",
+                scientific: "Spheniscidae",
+                habitat: "Antarctica, coastal regions",
+                diet: "Fish, squid, krill",
+                size: "40-115 cm (16-45 in)",
+                wingspan: "Flippers instead of wings",
+                lifespan: "15-20 years",
+                funFact: "Penguins cannot fly but are excellent swimmers.",
+                description: "Penguins are flightless birds adapted to life in water, known for their black and white coloring."
+            },
+            "Western_Gull": {
+                name: "Western Gull",
+                scientific: "Larus occidentalis",
+                habitat: "Coastal areas, beaches, rocky shores",
+                diet: "Fish, invertebrates, carrion, human scraps",
+                size: "55-68 cm (22-27 in)",
+                wingspan: "130-150 cm (51-59 in)",
+                lifespan: "15-25 years",
+                funFact: "Western Gulls are known to drop shellfish onto rocks to break them open.",
+                description: "The Western Gull is a large seabird found along the Pacific coast of North America. It has a white head and body, gray wings, and a yellow bill with a red spot. Known for its loud calls and bold behavior, it often scavenges near human activity."
+            },
+            "Pigeon": {
+                name: "Pigeon",
+                scientific: "Columba livia",
+                habitat: "Cities, cliffs, buildings",
+                diet: "Seeds, grains, scraps",
+                size: "30-35 cm (12-14 in)",
+                wingspan: "60-70 cm (24-28 in)",
+                lifespan: "3-6 years",
+                funFact: "Pigeons can recognize themselves in mirrors.",
+                description: "Pigeons are common urban birds known for their adaptability and homing ability."
+            },
+
+            "Parrot": {
+                name: "Parrot",
+                scientific: "Psittaciformes",
+                habitat: "Tropical forests",
+                diet: "Fruits, nuts, seeds",
+                size: "8-100 cm (3-40 in)",
+                wingspan: "Varies",
+                lifespan: "20-80 years",
+                funFact: "Parrots can mimic human speech.",
+                description: "Parrots are colorful, intelligent birds with strong curved beaks."
+            },
+
+            "Duck": {
+                name: "Duck",
+                scientific: "Anatidae",
+                habitat: "Lakes, rivers, wetlands",
+                diet: "Plants, insects, fish",
+                size: "40-60 cm (16-24 in)",
+                wingspan: "60-95 cm (24-37 in)",
+                lifespan: "5-10 years",
+                funFact: "Ducks have waterproof feathers.",
+                description: "Ducks are waterfowl known for their webbed feet and waddling walk."
+            },
+
+            "Crow": {
+                name: "Crow",
+                scientific: "Corvus",
+                habitat: "Forests, cities, farmland",
+                diet: "Omnivorous",
+                size: "40-50 cm (16-20 in)",
+                wingspan: "85-100 cm (33-39 in)",
+                lifespan: "7-15 years",
+                funFact: "Crows are highly intelligent and use tools.",
+                description: "Crows are black birds known for their intelligence and problem-solving skills."
+            },
+
+            "Yellow-headed_Blackbird": {
+                name: "Yellow-headed Blackbird",
+                scientific: "Xanthocephalus xanthocephalus",
+                habitat: "Wetlands",
+                diet: "Insects, seeds",
+                size: "20-26 cm",
+                wingspan: "42-45 cm",
+                lifespan: "5-7 years",
+                funFact: "Males have bright yellow heads.",
+                description: "A striking blackbird with a vivid yellow head."
+            },
+
+            "Yellow-throated_Vireo": {
+                name: "Yellow-throated Vireo",
+                scientific: "Vireo flavifrons",
+                habitat: "Deciduous forests",
+                diet: "Insects, berries",
+                size: "13-15 cm",
+                wingspan: "23-25 cm",
+                lifespan: "6-10 years",
+                funFact: "They sing continuously throughout the day.",
+                description: "A small bird with a bright yellow throat and white belly."
+            },
+
+            "Tree_Swallow": {
+                name: "Tree Swallow",
+                scientific: "Tachycineta bicolor",
+                habitat: "Near water, open fields",
+                diet: "Flying insects",
+                size: "12-15 cm",
+                wingspan: "30-33 cm",
+                lifespan: "2-5 years",
+                funFact: "They can glide long distances effortlessly.",
+                description: "A small bird with iridescent blue-green feathers."
+            },
+
+            "Bobolink": {
+                name: "Bobolink",
+                scientific: "Dolichonyx oryzivorus",
+                habitat: "Grasslands",
+                diet: "Seeds, insects",
+                size: "15-18 cm",
+                wingspan: "27-30 cm",
+                lifespan: "4-6 years",
+                funFact: "They migrate long distances to South America.",
+                description: "A blackbird known for its bubbling song."
+            },
+
+            "Yellow_billed_Cuckoo": {
+                name: "Yellow-billed Cuckoo",
+                scientific: "Coccyzus americanus",
+                habitat: "Woodlands",
+                diet: "Insects, caterpillars",
+                size: "26-30 cm",
+                wingspan: "43-46 cm",
+                lifespan: "5-7 years",
+                funFact: "They eat hairy caterpillars avoided by other birds.",
+                description: "A slender bird with a long tail and yellow bill."
+            },
+
+            "Yellow_Warbler": {
+                name: "Yellow Warbler",
+                scientific: "Setophaga petechia",
+                habitat: "Shrubs, wetlands",
+                diet: "Insects",
+                size: "10-12 cm",
+                wingspan: "16-20 cm",
+                lifespan: "5-8 years",
+                funFact: "Males sing a 'sweet sweet sweet' song.",
+                description: "A bright yellow bird often seen near water."
+            },
+
+            "Worm_eating_Warbler": {
+                name: "Worm-eating Warbler",
+                scientific: "Helmitheros vermivorum",
+                habitat: "Forests",
+                diet: "Insects",
+                size: "12-13 cm",
+                wingspan: "20-22 cm",
+                lifespan: "4-7 years",
+                funFact: "Despite the name, they rarely eat worms.",
+                description: "A small bird with olive-brown plumage."
+            },
+
+            "Wilson_Warbler": {
+                name: "Wilson's Warbler",
+                scientific: "Cardellina pusilla",
+                habitat: "Shrubs, forests",
+                diet: "Insects",
+                size: "10-12 cm",
+                wingspan: "17-22 cm",
+                lifespan: "5-8 years",
+                funFact: "Males have a black cap.",
+                description: "A tiny yellow bird with a cheerful song."
+            },
+
+            "Winter_Wren": {
+                name: "Winter Wren",
+                scientific: "Troglodytes hiemalis",
+                habitat: "Forests",
+                diet: "Insects",
+                size: "8-10 cm",
+                wingspan: "13-15 cm",
+                lifespan: "3-6 years",
+                funFact: "One of the loudest songs for its size.",
+                description: "A tiny brown bird with a short tail."
+            },
+
+            "White_throated_Sparrow": {
+                name: "White-throated Sparrow",
+                scientific: "Zonotrichia albicollis",
+                habitat: "Forests, gardens",
+                diet: "Seeds, insects",
+                size: "15-18 cm",
+                wingspan: "20-23 cm",
+                lifespan: "9-12 years",
+                funFact: "Recognized by its whistling song.",
+                description: "A sparrow with a white throat and striped head."
+            },
+
+            "White_breasted_Nuthatch": {
+                name: "White-breasted Nuthatch",
+                scientific: "Sitta carolinensis",
+                habitat: "Woodlands",
+                diet: "Insects, seeds",
+                size: "13-15 cm",
+                wingspan: "20-27 cm",
+                lifespan: "5-10 years",
+                funFact: "Can climb down trees headfirst.",
+                description: "A small bird with a white face and chest."
+            },
+
+            "White_breasted_Kingfisher": {
+                name: "White-breasted Kingfisher",
+                scientific: "Halcyon smyrnensis",
+                habitat: "Wetlands, urban areas",
+                diet: "Fish, insects",
+                size: "27-28 cm",
+                wingspan: "40-45 cm",
+                lifespan: "6-10 years",
+                funFact: "Not limited to fishing—hunts on land too.",
+                description: "A brightly colored kingfisher with a white chest."
+            },
+
+            "White_Pelican": {
+                name: "White Pelican",
+                scientific: "Pelecanus erythrorhynchos",
+                habitat: "Lakes, wetlands",
+                diet: "Fish",
+                size: "130-180 cm",
+                wingspan: "240-300 cm",
+                lifespan: "15-25 years",
+                funFact: "Has one of the largest wingspans among birds.",
+                description: "A large white bird with a long bill and throat pouch."
+            },
+
+            "Whippoorwill": {
+                name: "Whippoorwill",
+                scientific: "Antrostomus vociferus",
+                habitat: "Forests",
+                diet: "Insects",
+                size: "22-27 cm",
+                wingspan: "45-50 cm",
+                lifespan: "4-8 years",
+                funFact: "Named after its call sound.",
+                description: "A nocturnal bird known for its repetitive call."
+            },
+
+            "Western_Wood_Pewee": {
+                name: "Western Wood Pewee",
+                scientific: "Contopus sordidulus",
+                habitat: "Forests",
+                diet: "Insects",
+                size: "15-17 cm",
+                wingspan: "25-28 cm",
+                lifespan: "5-9 years",
+                funFact: "Catches insects mid-air.",
+                description: "A small grayish flycatcher."
+            },
+
+            "Western_Gull": {
+                name: "Western Gull",
+                scientific: "Larus occidentalis",
+                habitat: "Coastal areas",
+                diet: "Fish, scavenged food",
+                size: "55-68 cm",
+                wingspan: "130-150 cm",
+                lifespan: "15-25 years",
+                funFact: "Often steals food from other birds.",
+                description: "A large gull with a strong beak."
+            },
+            "House_Sparrow": {
+                name: "House Sparrow",
+                scientific: "Passer domesticus",
+                habitat: "Urban areas, villages, farms",
+                diet: "Seeds, grains, insects",
+                size: "14-16 cm",
+                wingspan: "19-25 cm",
+                lifespan: "3-5 years",
+                funFact: "One of the most widespread birds in the world.",
+                description: "A small brown bird commonly found near humans."
+            },
+
+            "Tree_Sparrow": {
+                name: "Tree Sparrow",
+                scientific: "Passer montanus",
+                habitat: "Woodlands, farmland",
+                diet: "Seeds, insects",
+                size: "12-14 cm",
+                wingspan: "20-22 cm",
+                lifespan: "3-6 years",
+                funFact: "Has a black spot on its white cheek.",
+                description: "A small sparrow often seen in rural areas."
+            },
+
+            "Tree_Swallow": {
+                name: "Tree Swallow",
+                scientific: "Tachycineta bicolor",
+                habitat: "Near water, open fields",
+                diet: "Flying insects",
+                size: "12-15 cm",
+                wingspan: "30-33 cm",
+                lifespan: "2-5 years",
+                funFact: "They glide smoothly while catching insects mid-air.",
+                description: "A shiny blue-green bird known for aerial feeding."
+            },
+
+            "Tropical_Kingbird": {
+                name: "Tropical Kingbird",
+                scientific: "Tyrannus melancholicus",
+                habitat: "Open areas, savannas",
+                diet: "Insects, fruits",
+                size: "20-23 cm",
+                wingspan: "35-38 cm",
+                lifespan: "5-8 years",
+                funFact: "Often seen perched on wires hunting insects.",
+                description: "A bright yellow-bellied flycatcher bird."
+            },
+
+            "Scissor_tailed_Flycatcher": {
+                name: "Scissor-tailed Flycatcher",
+                scientific: "Tyrannus forficatus",
+                habitat: "Grasslands, open country",
+                diet: "Insects",
+                size: "37-41 cm",
+                wingspan: "38-40 cm",
+                lifespan: "5-10 years",
+                funFact: "Has extremely long forked tail feathers.",
+                description: "A graceful bird known for its long tail and flight."
+            },
+
+            "Scarlet_Tanager": {
+                name: "Scarlet Tanager",
+                scientific: "Piranga olivacea",
+                habitat: "Deciduous forests",
+                diet: "Insects, fruits",
+                size: "16-19 cm",
+                wingspan: "25-30 cm",
+                lifespan: "7-10 years",
+                funFact: "Males are bright red with black wings.",
+                description: "A striking red bird often hidden in tree canopies."
+            },
+
+            "Summer_Tanager": {
+                name: "Summer Tanager",
+                scientific: "Piranga rubra",
+                habitat: "Woodlands",
+                diet: "Insects, berries",
+                size: "17-19 cm",
+                wingspan: "28-30 cm",
+                lifespan: "6-10 years",
+                funFact: "Known as the 'bee bird' because it eats bees.",
+                description: "A red or yellow bird found in warm regions."
+            },
+
+            "Tennessee_Warbler": {
+                name: "Tennessee Warbler",
+                scientific: "Leiothlypis peregrina",
+                habitat: "Forests",
+                diet: "Insects",
+                size: "11-12 cm",
+                wingspan: "16-18 cm",
+                lifespan: "5-8 years",
+                funFact: "Migrates long distances yearly.",
+                description: "A small greenish warbler with a thin bill."
+            },
+
+            "Swainson_Warbler": {
+                name: "Swainson's Warbler",
+                scientific: "Limnothlypis swainsonii",
+                habitat: "Dense forests",
+                diet: "Insects",
+                size: "13-15 cm",
+                wingspan: "22-25 cm",
+                lifespan: "5-8 years",
+                funFact: "Very secretive and hard to spot.",
+                description: "A brownish warbler found in thick vegetation."
+            },
+
+            "Palm_Warbler": {
+                name: "Palm Warbler",
+                scientific: "Setophaga palmarum",
+                habitat: "Open fields, wetlands",
+                diet: "Insects",
+                size: "12-14 cm",
+                wingspan: "20-22 cm",
+                lifespan: "5-8 years",
+                funFact: "Constantly wags its tail.",
+                description: "A small bird with a yellow underside."
+            },
+
+            "Pine_Warbler": {
+                name: "Pine Warbler",
+                scientific: "Setophaga pinus",
+                habitat: "Pine forests",
+                diet: "Insects, seeds",
+                size: "13-15 cm",
+                wingspan: "20-25 cm",
+                lifespan: "5-9 years",
+                funFact: "One of the few warblers that eats seeds.",
+                description: "A yellow-green bird found in pine trees."
+            },
+
+            "Red_winged_Blackbird": {
+                name: "Red-winged Blackbird",
+                scientific: "Agelaius phoeniceus",
+                habitat: "Wetlands, marshes",
+                diet: "Seeds, insects",
+                size: "17-23 cm",
+                wingspan: "30-40 cm",
+                lifespan: "5-10 years",
+                funFact: "Males have red and yellow shoulder patches.",
+                description: "A black bird known for its bold red markings."
+            },
+
+            "Rusty_Blackbird": {
+                name: "Rusty Blackbird",
+                scientific: "Euphagus carolinus",
+                habitat: "Wetlands, forests",
+                diet: "Insects, seeds",
+                size: "21-23 cm",
+                wingspan: "35-38 cm",
+                lifespan: "5-8 years",
+                funFact: "Named for its rusty-colored feathers in winter.",
+                description: "A dark bird with seasonal color changes."
+            },
+
+            "Ring_billed_Gull": {
+                name: "Ring-billed Gull",
+                scientific: "Larus delawarensis",
+                habitat: "Lakes, coasts",
+                diet: "Fish, insects, scraps",
+                size: "45-54 cm",
+                wingspan: "120-130 cm",
+                lifespan: "10-20 years",
+                funFact: "Has a black ring around its bill.",
+                description: "A medium-sized gull often seen near water."
+            },
+
+            "Rock_Wren": {
+                name: "Rock Wren",
+                scientific: "Salpinctes obsoletus",
+                habitat: "Rocky areas",
+                diet: "Insects",
+                size: "13-15 cm",
+                wingspan: "22-24 cm",
+                lifespan: "5-7 years",
+                funFact: "Builds nests with small stones.",
+                description: "A small bird adapted to rocky environments."
+            },
+
+            "Hummingbird": {
+                name: "Hummingbird",
+                scientific: "Trochilidae",
+                habitat: "Forests, gardens",
+                diet: "Nectar, insects",
+                size: "7-13 cm",
+                wingspan: "8-15 cm",
+                lifespan: "3-5 years",
+                funFact: "Can hover in mid-air.",
+                description: "A tiny bird known for rapid wing movement."
+            },
+
+            "Rufous_Hummingbird": {
+                name: "Rufous Hummingbird",
+                scientific: "Selasphorus rufus",
+                habitat: "Forests, meadows",
+                diet: "Nectar, insects",
+                size: "7-9 cm",
+                wingspan: "11-13 cm",
+                lifespan: "3-5 years",
+                funFact: "One of the longest migrators for its size.",
+                description: "A small orange-colored hummingbird."
+            },
+
+            "Rose_breasted_Grosbeak": {
+                name: "Rose-breasted Grosbeak",
+                scientific: "Pheucticus ludovicianus",
+                habitat: "Forests",
+                diet: "Seeds, fruits, insects",
+                size: "18-22 cm",
+                wingspan: "30-33 cm",
+                lifespan: "7-10 years",
+                funFact: "Males have a bright red chest.",
+                description: "A striking black-and-white bird with a red patch."
+            },
+
+            "Pine_Grosbeak": {
+                name: "Pine Grosbeak",
+                scientific: "Pinicola enucleator",
+                habitat: "Coniferous forests",
+                diet: "Fruits, seeds",
+                size: "20-25 cm",
+                wingspan: "30-35 cm",
+                lifespan: "6-10 years",
+                funFact: "Prefers cold northern regions.",
+                description: "A large finch with soft plumage."
+            },
+
+            "Painted_Bunting": {
+                name: "Painted Bunting",
+                scientific: "Passerina ciris",
+                habitat: "Shrubs, woodlands",
+                diet: "Seeds, insects",
+                size: "12-14 cm",
+                wingspan: "20-23 cm",
+                lifespan: "5-8 years",
+                funFact: "Considered one of the most colorful birds in North America.",
+                description: "A brightly colored bird with blue, green, and red feathers."
+            },
+
+            "Ovenbird": {
+                name: "Ovenbird",
+                scientific: "Seiurus aurocapilla",
+                habitat: "Forests",
+                diet: "Insects",
+                size: "14-16 cm",
+                wingspan: "19-26 cm",
+                lifespan: "6-9 years",
+                funFact: "Builds oven-shaped nests on the ground.",
+                description: "A brown bird with a loud 'teacher-teacher' call."
+            },
+
+            "Pacific_Loon": {
+                name: "Pacific Loon",
+                scientific: "Gavia pacifica",
+                habitat: "Arctic lakes, oceans",
+                diet: "Fish",
+                size: "60-70 cm",
+                wingspan: "110-120 cm",
+                lifespan: "10-20 years",
+                funFact: "Excellent diver.",
+                description: "A sleek water bird with striking patterns."
+            },
+            "Orchard_Oriole": {
+                name: "Orchard Oriole",
+                scientific: "Icterus spurius",
+                habitat: "Open woodlands, gardens",
+                diet: "Insects, nectar, fruits",
+                size: "15-18 cm",
+                wingspan: "23-27 cm",
+                lifespan: "6-10 years",
+                funFact: "Males are chestnut and black.",
+                description: "A small colorful oriole often found in orchards."
+            },
+
+            "Hooded_Oriole": {
+                name: "Hooded Oriole",
+                scientific: "Icterus cucullatus",
+                habitat: "Palm trees, open woodlands",
+                diet: "Nectar, insects, fruits",
+                size: "18-20 cm",
+                wingspan: "25-30 cm",
+                lifespan: "6-10 years",
+                funFact: "Builds hanging nests in palm trees.",
+                description: "A bright yellow-orange bird with a black face."
+            },
+
+            "Northern_Waterthrush": {
+                name: "Northern Waterthrush",
+                scientific: "Parkesia noveboracensis",
+                habitat: "Wetlands, forests",
+                diet: "Insects",
+                size: "13-15 cm",
+                wingspan: "21-24 cm",
+                lifespan: "5-8 years",
+                funFact: "Walks like a thrush but is actually a warbler.",
+                description: "A brown bird with a bold white eyebrow stripe."
+            },
+
+            "Olive_sided_Flycatcher": {
+                name: "Olive-sided Flycatcher",
+                scientific: "Contopus cooperi",
+                habitat: "Forests, open woodland",
+                diet: "Flying insects",
+                size: "18-20 cm",
+                wingspan: "30-33 cm",
+                lifespan: "5-8 years",
+                funFact: "Famous for its 'quick-three-beers' call.",
+                description: "A large flycatcher often perched high."
+            },
+
+            "Northern_Flicker": {
+                name: "Northern Flicker",
+                scientific: "Colaptes auratus",
+                habitat: "Woodlands, urban areas",
+                diet: "Ants, insects",
+                size: "28-36 cm",
+                wingspan: "42-51 cm",
+                lifespan: "6-9 years",
+                funFact: "One of the few woodpeckers that feeds on the ground.",
+                description: "A brown woodpecker with black spots."
+            },
+
+            "Marsh_Wren": {
+                name: "Marsh Wren",
+                scientific: "Cistothorus palustris",
+                habitat: "Wetlands, marshes",
+                diet: "Insects",
+                size: "10-14 cm",
+                wingspan: "13-16 cm",
+                lifespan: "3-6 years",
+                funFact: "Builds multiple nests.",
+                description: "A small brown bird with a bubbly song."
+            },
+
+            "Mallard": {
+                name: "Mallard",
+                scientific: "Anas platyrhynchos",
+                habitat: "Ponds, lakes, rivers",
+                diet: "Plants, insects",
+                size: "50-65 cm",
+                wingspan: "80-98 cm",
+                lifespan: "5-10 years",
+                funFact: "Males have green heads.",
+                description: "A common duck species worldwide."
+            },
+
+            "Magnolia_Warbler": {
+                name: "Magnolia Warbler",
+                scientific: "Setophaga magnolia",
+                habitat: "Forests",
+                diet: "Insects",
+                size: "11-13 cm",
+                wingspan: "16-20 cm",
+                lifespan: "5-8 years",
+                funFact: "Has a bright yellow chest with black streaks.",
+                description: "A small colorful warbler."
+            },
+
+            "Loggerhead_Shrike": {
+                name: "Loggerhead Shrike",
+                scientific: "Lanius ludovicianus",
+                habitat: "Open fields",
+                diet: "Insects, small animals",
+                size: "20-23 cm",
+                wingspan: "28-32 cm",
+                lifespan: "5-7 years",
+                funFact: "Impales prey on thorns.",
+                description: "A gray bird with a black mask."
+            },
+
+            "Lazuli_Bunting": {
+                name: "Lazuli Bunting",
+                scientific: "Passerina amoena",
+                habitat: "Shrubs, open woodland",
+                diet: "Seeds, insects",
+                size: "13-15 cm",
+                wingspan: "20-23 cm",
+                lifespan: "5-8 years",
+                funFact: "Males are bright blue.",
+                description: "A colorful small songbird."
+            },
+
+            "Laysan_Albatross": {
+                name: "Laysan Albatross",
+                scientific: "Phoebastria immutabilis",
+                habitat: "Open ocean",
+                diet: "Fish, squid",
+                size: "80-85 cm",
+                wingspan: "195-203 cm",
+                lifespan: "40-60 years",
+                funFact: "Forms lifelong pair bonds.",
+                description: "A large seabird with long wings."
+            },
+
+            "Indigo_Bunting": {
+                name: "Indigo Bunting",
+                scientific: "Passerina cyanea",
+                habitat: "Fields, forests",
+                diet: "Seeds, insects",
+                size: "11-13 cm",
+                wingspan: "18-22 cm",
+                lifespan: "5-10 years",
+                funFact: "Males appear bright blue in sunlight.",
+                description: "A small vibrant blue bird."
+            },
+
+            "Hous_ Wren": {
+                name: "House Wren",
+                scientific: "Troglodytes aedon",
+                habitat: "Gardens, woodlands",
+                diet: "Insects",
+                size: "11-13 cm",
+                wingspan: "15-18 cm",
+                lifespan: "3-6 years",
+                funFact: "Very loud for its size.",
+                description: "A small brown bird with a strong voice."
+            },
+
+            "Horned_Grebe": {
+                name: "Horned Grebe",
+                scientific: "Podiceps auritus",
+                habitat: "Lakes, ponds",
+                diet: "Fish, insects",
+                size: "31-38 cm",
+                wingspan: "55-75 cm",
+                lifespan: "5-10 years",
+                funFact: "Has golden 'horns' in breeding season.",
+                description: "A diving water bird."
+            },
+
+            "Horned_Lark": {
+                name: "Horned Lark",
+                scientific: "Eremophila alpestris",
+                habitat: "Open land",
+                diet: "Seeds, insects",
+                size: "16-20 cm",
+                wingspan: "30-35 cm",
+                lifespan: "5-8 years",
+                funFact: "Has small feather 'horns'.",
+                description: "A ground-dwelling bird."
+            },
+
+            "Herring_Gull": {
+                name: "Herring Gull",
+                scientific: "Larus argentatus",
+                habitat: "Coastal areas",
+                diet: "Fish, scraps",
+                size: "55-67 cm",
+                wingspan: "125-155 cm",
+                lifespan: "15-25 years",
+                funFact: "Highly adaptable scavenger.",
+                description: "A large gray-and-white gull."
+            },
+
+            "Green_Jay": {
+                name: "Green Jay",
+                scientific: "Cyanocorax yncas",
+                habitat: "Forests",
+                diet: "Fruits, insects",
+                size: "25-30 cm",
+                wingspan: "35-40 cm",
+                lifespan: "6-10 years",
+                funFact: "Very intelligent bird.",
+                description: "A bright green and blue jay."
+            },
+
+            "Great_Crested_Flycatcher": {
+                name: "Great Crested Flycatcher",
+                scientific: "Myiarchus crinitus",
+                habitat: "Forests",
+                diet: "Insects",
+                size: "18-21 cm",
+                wingspan: "30-34 cm",
+                lifespan: "5-9 years",
+                funFact: "Lines nests with snake skins.",
+                description: "A large flycatcher with yellow belly."
+            },
+
+            "Grasshopper_Sparrow": {
+                name: "Grasshopper Sparrow",
+                scientific: "Ammodramus savannarum",
+                habitat: "Grasslands",
+                diet: "Seeds, insects",
+                size: "10-13 cm",
+                wingspan: "17-20 cm",
+                lifespan: "4-6 years",
+                funFact: "Song sounds like a grasshopper.",
+                description: "A small secretive bird."
+            },
+
+            "Grey_Catbird": {
+                name: "Grey Catbird",
+                scientific: "Dumetella carolinensis",
+                habitat: "Shrubs",
+                diet: "Fruits, insects",
+                size: "20-24 cm",
+                wingspan: "22-30 cm",
+                lifespan: "6-10 years",
+                funFact: "Makes cat-like sounds.",
+                description: "A gray bird with black cap."
+            },
+
+            "Golden_winged_Warbler": {
+                name: "Golden-winged Warbler",
+                scientific: "Vermivora chrysoptera",
+                habitat: "Shrubs, forests",
+                diet: "Insects",
+                size: "11-12 cm",
+                wingspan: "17-20 cm",
+                lifespan: "5-8 years",
+                funFact: "Has striking yellow wing patches.",
+                description: "A rare small warbler."
+            },
+
+            "Frigatebird": {
+                name: "Frigatebird",
+                scientific: "Fregata",
+                habitat: "Tropical oceans",
+                diet: "Fish",
+                size: "70-114 cm",
+                wingspan: "200-230 cm",
+                lifespan: "25-35 years",
+                funFact: "Males inflate a red throat pouch.",
+                description: "A large seabird with long wings."
+            },
+
+            "Fox_Sparrow": {
+                name: "Fox Sparrow",
+                scientific: "Passerella iliaca",
+                habitat: "Forests",
+                diet: "Seeds, insects",
+                size: "15-19 cm",
+                wingspan: "25-30 cm",
+                lifespan: "5-8 years",
+                funFact: "Named for its fox-like color.",
+                description: "A chunky reddish sparrow."
+            },
+
+            "Fish_Crow": {
+                name: "Fish Crow",
+                scientific: "Corvus ossifragus",
+                habitat: "Coastal regions",
+                diet: "Fish, insects",
+                size: "36-41 cm",
+                wingspan: "85-100 cm",
+                lifespan: "7-15 years",
+                funFact: "Call sounds nasal.",
+                description: "A smaller relative of the American crow."
+            },
+
+            "Evening_Grosbeak": {
+                name: "Evening Grosbeak",
+                scientific: "Coccothraustes vespertinus",
+                habitat: "Forests",
+                diet: "Seeds, berries",
+                size: "16-22 cm",
+                wingspan: "30-36 cm",
+                lifespan: "6-10 years",
+                funFact: "Has a very strong beak.",
+                description: "A colorful finch."
+            },
+
+            "Down_Woodpecker": {
+                name: "Downy Woodpecker",
+                scientific: "Dryobates pubescens",
+                habitat: "Forests, gardens",
+                diet: "Insects",
+                size: "14-18 cm",
+                wingspan: "25-31 cm",
+                lifespan: "4-8 years",
+                funFact: "Smallest woodpecker in North America.",
+                description: "A black-and-white woodpecker."
+            },
+
+            "Common Raven": {
+                name: "Common Raven",
+                scientific: "Corvus corax",
+                habitat: "Mountains, forests",
+                diet: "Omnivorous",
+                size: "56-69 cm",
+                wingspan: "115-150 cm",
+                lifespan: "10-20 years",
+                funFact: "One of the smartest birds.",
+                description: "A large black bird with deep voice."
+            },
+
+            "Cliff_Swallow": {
+                name: "Cliff Swallow",
+                scientific: "Petrochelidon pyrrhonota",
+                habitat: "Cliffs, bridges",
+                diet: "Insects",
+                size: "13-15 cm",
+                wingspan: "28-33 cm",
+                lifespan: "4-7 years",
+                funFact: "Builds mud nests.",
+                description: "A social bird that nests in colonies."
+            },
+
+            "Chipping_Sparrow": {
+                name: "Chipping Sparrow",
+                scientific: "Spizella passerina",
+                habitat: "Open woodlands",
+                diet: "Seeds, insects",
+                size: "12-15 cm",
+                wingspan: "20-23 cm",
+                lifespan: "4-7 years",
+                funFact: "Has a rusty crown.",
+                description: "A small neat sparrow."
+            },
+
+            "Carolina_Wren": {
+                name: "Carolina Wren",
+                scientific: "Thryothorus ludovicianus",
+                habitat: "Forests, gardens",
+                diet: "Insects",
+                size: "12-14 cm",
+                wingspan: "15-18 cm",
+                lifespan: "6-10 years",
+                funFact: "Known for loud song.",
+                description: "A small brown bird with white eyebrow."
+            },
+
+            "Brown_Pelican": {
+                name: "Brown Pelican",
+                scientific: "Pelecanus occidentalis",
+                habitat: "Coastal waters",
+                diet: "Fish",
+                size: "100-137 cm",
+                wingspan: "200-230 cm",
+                lifespan: "10-25 years",
+                funFact: "Dives into water to catch fish.",
+                description: "A large seabird with throat pouch."
+            },
+
+            "Boat_tailed_Grackle": {
+                name: "Boat-tailed Grackle",
+                scientific: "Quiscalus major",
+                habitat: "Coastal marshes",
+                diet: "Omnivorous",
+                size: "26-37 cm",
+                wingspan: "39-50 cm",
+                lifespan: "5-10 years",
+                funFact: "Males are glossy black.",
+                description: "A large blackbird with long tail."
+            },
+
+            "Belted_Kingfisher": {
+                name: "Belted Kingfisher",
+                scientific: "Megaceryle alcyon",
+                habitat: "Rivers, lakes",
+                diet: "Fish",
+                size: "28-35 cm",
+                wingspan: "48-58 cm",
+                lifespan: "6-10 years",
+                funFact: "Dives headfirst to catch fish.",
+                description: "A blue-gray bird with shaggy crest."
+            },
+
+            "Barn_Swallow": {
+                name: "Barn Swallow",
+                scientific: "Hirundo rustica",
+                habitat: "Open areas, farms",
+                diet: "Insects",
+                size: "15-19 cm",
+                wingspan: "32-34 cm",
+                lifespan: "4-8 years",
+                funFact: "Has a deeply forked tail.",
+                description: "A graceful flying bird."
+            },
+
+            "Baltimore_Oriole": {
+                name: "Baltimore Oriole",
+                scientific: "Icterus galbula",
+                habitat: "Open woodlands",
+                diet: "Insects, nectar",
+                size: "17-22 cm",
+                wingspan: "23-32 cm",
+                lifespan: "6-10 years",
+                funFact: "Builds hanging pouch nests.",
+                description: "A bright orange and black bird."
+            },
+
+            "Anna_Hummingbird": {
+                name: "Anna's Hummingbird",
+                scientific: "Calypte anna",
+                habitat: "Gardens, forests",
+                diet: "Nectar",
+                size: "9-10 cm",
+                wingspan: "11-12 cm",
+                lifespan: "3-5 years",
+                funFact: "Males have iridescent pink heads.",
+                description: "A tiny fast-flying bird."
+            },
+
+            "American_Goldfinch": {
+                name: "American Goldfinch",
+                scientific: "Spinus tristis",
+                habitat: "Fields, gardens",
+                diet: "Seeds",
+                size: "11-13 cm",
+                wingspan: "19-22 cm",
+                lifespan: "5-10 years",
+                funFact: "Changes color seasonally.",
+                description: "A bright yellow bird."
+            },
+
+            "American_Crow": {
+                name: "American Crow",
+                scientific: "Corvus brachyrhynchos",
+                habitat: "Forests, cities",
+                diet: "Omnivorous",
+                size: "40-50 cm",
+                wingspan: "85-100 cm",
+                lifespan: "7-15 years",
+                funFact: "Highly intelligent.",
+                description: "A large black bird."
+            },
+
+            "Acadian_Flycatcher": {
+                name: "Acadian Flycatcher",
+                scientific: "Empidonax virescens",
+                habitat: "Forests",
+                diet: "Insects",
+                size: "13-15 cm",
+                wingspan: "20-25 cm",
+                lifespan: "5-8 years",
+                funFact: "Very quick insect hunter.",
+                description: "A small greenish flycatcher."
+            }
+
+        };
+        function getBirdInfo(birdName) { if (birdDatabase[birdName]) return birdDatabase[birdName]; const lowerName = birdName.toLowerCase(); for (let key in birdDatabase) if (lowerName.includes(key.toLowerCase()) || key.toLowerCase().includes(lowerName)) return birdDatabase[key]; return { name: birdName, scientific: "Species in classification", habitat: "Various habitats", diet: "Insects, seeds, fruits", size: "Varies", wingspan: "Varies", lifespan: "2-20 years", funFact: "There are over 10,000 bird species worldwide!", description: `${birdName} is a fascinating bird species.` }; }
+
+        const API_KEY = "HgsEGul7X6mHuVO4yPJv", MODEL_URL = "https://serverless.roboflow.com/bird-classifications/2";
+        let currentImage = null, mediaStream = null;
+        const uploadArea = document.getElementById("uploadArea"), imageInput = document.getElementById("imageInput"), cameraBtn = document.getElementById("cameraBtn"), urlBtn = document.getElementById("urlBtn"), video = document.getElementById("video"), captureBtn = document.getElementById("captureBtn"), imagePreview = document.getElementById("imagePreview"), analyzeBtn = document.getElementById("analyzeBtn"), clearBtn = document.getElementById("clearBtn"), loadingDiv = document.getElementById("loading"), resultsSection = document.getElementById("resultsSection"), predictionsGrid = document.getElementById("predictionsGrid");
+
+        function showSection(section) {
+            document.getElementById('homeSection').classList.add('hidden-section'); document.getElementById('homeSection').classList.remove('active-section');
+            document.getElementById('aboutSection').classList.add('hidden-section'); document.getElementById('aboutSection').classList.remove('active-section');
+            document.getElementById('historySection').classList.add('hidden-section'); document.getElementById('historySection').classList.remove('active-section');
+            if (section === 'home') { document.getElementById('homeSection').classList.remove('hidden-section'); document.getElementById('homeSection').classList.add('active-section'); }
+            else if (section === 'about') { document.getElementById('aboutSection').classList.remove('hidden-section'); document.getElementById('aboutSection').classList.add('active-section'); }
+            else if (section === 'history') { document.getElementById('historySection').classList.remove('hidden-section'); document.getElementById('historySection').classList.add('active-section'); renderHistory(); }
+        }
+        function openLoginModal() { document.getElementById('loginModal').style.display = 'flex'; }
+        function closeLoginModal() { document.getElementById('loginModal').style.display = 'none'; }
+        function showBirdDetail(birdName) { const bird = getBirdInfo(birdName); document.getElementById("modalBirdName").innerHTML = `${bird.name} <span style="font-size:0.9rem; color:#a5b4fc;">${bird.scientific}</span>`; const imgContainer = document.getElementById("modalBirdImage"); if (currentImage) imgContainer.innerHTML = `<img src="${currentImage}" alt="Your uploaded ${bird.name}">`; else imgContainer.innerHTML = `<i class="fas fa-dove placeholder-icon"></i>`; document.getElementById("modalBirdTags").innerHTML = `<span class="bird-info-tag"><i class="fas fa-ruler"></i> ${bird.size}</span><span class="bird-info-tag"><i class="fas fa-tree"></i> ${bird.habitat.split(',')[0]}</span><span class="bird-info-tag"><i class="fas fa-utensils"></i> ${bird.diet.split(',')[0]}</span>`; document.getElementById("modalBirdDescription").innerHTML = bird.description; document.getElementById("modalBirdDetails").innerHTML = `<div class="bird-detail-item"><strong><i class="fas fa-ruler-combined"></i> Size:</strong> ${bird.size}</div><div class="bird-detail-item"><strong><i class="fas fa-expand-alt"></i> Wingspan:</strong> ${bird.wingspan}</div><div class="bird-detail-item"><strong><i class="fas fa-leaf"></i> Habitat:</strong> ${bird.habitat}</div><div class="bird-detail-item"><strong><i class="fas fa-apple-alt"></i> Diet:</strong> ${bird.diet}</div><div class="bird-detail-item"><strong><i class="fas fa-clock"></i> Lifespan:</strong> ${bird.lifespan}</div><div class="bird-detail-item"><strong><i class="fas fa-star"></i> Fun Fact:</strong> ${bird.funFact}</div>`; document.getElementById("birdDetailModal").style.display = "flex"; }
+        function closeBirdModal() { document.getElementById("birdDetailModal").style.display = "none"; }
+        function handleFile(file) { if (!file) return; const reader = new FileReader(); reader.onload = e => { currentImage = e.target.result; imagePreview.src = currentImage; imagePreview.style.display = "block"; if (video.style.display === "block") stopCamera(); video.style.display = "none"; captureBtn.style.display = "none"; analyzeBtn.disabled = false; resultsSection.style.display = "none"; showMessage("✅ Image loaded! Click 'Identify Species' to discover this bird."); }; reader.readAsDataURL(file); }
+        async function handleUrlUpload() { const url = prompt("Enter Image URL:"); if (!url) return; try { const res = await fetch(url); const blob = await res.blob(); handleFile(blob); } catch { showMessage("Invalid URL", true); } }
+        async function startCamera() { try { if (mediaStream) stopCamera(); const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } }); mediaStream = stream; video.srcObject = stream; video.style.display = "block"; captureBtn.style.display = "inline-flex"; imagePreview.style.display = "none"; analyzeBtn.disabled = true; showMessage("📷 Camera active — press Capture"); } catch { showMessage("Camera permission denied", true); } }
+        function stopCamera() { if (mediaStream) { mediaStream.getTracks().forEach(t => t.stop()); mediaStream = null; } video.srcObject = null; }
+        function capturePhoto() { if (!video.videoWidth) return; const canvas = document.createElement("canvas"); canvas.width = video.videoWidth; canvas.height = video.videoHeight; canvas.getContext("2d").drawImage(video, 0, 0); currentImage = canvas.toDataURL("image/jpeg", 0.9); imagePreview.src = currentImage; imagePreview.style.display = "block"; analyzeBtn.disabled = false; stopCamera(); video.style.display = "none"; captureBtn.style.display = "none"; showMessage("📸 Photo captured! Click Identify Species"); }
+        async function analyzeImage() { if (!currentImage) return; loadingDiv.style.display = "block"; analyzeBtn.disabled = true; predictionsGrid.innerHTML = ""; resultsSection.style.display = "none"; try { const base64 = currentImage.split(",")[1]; const res = await fetch(MODEL_URL + "?api_key=" + API_KEY, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: base64 }); const data = await res.json(); displayResults(data); } catch (err) { console.error(err); showMessage("Analysis failed. Please try again.", true); } loadingDiv.style.display = "none"; analyzeBtn.disabled = false; }
+        function displayResults(data) { predictionsGrid.innerHTML = ""; if (data.predictions && data.predictions.length) { let hasResults = false; data.predictions.forEach(p => { const percent = Math.round(p.confidence * 100); if (percent < 20) return; hasResults = true; const birdName = p.class; predictionsGrid.innerHTML += `<div class="prediction-card" onclick="showBirdDetail('${escapeHtml(birdName)}')"><b>🐦 ${escapeHtml(birdName)}</b><div class="confidence-bar"><div class="confidence-fill" style="width:${percent}%"></div></div><span style="font-size:0.85rem; color:var(--text-muted)">${percent}% confidence — Click for detailed information & YOUR uploaded bird image! ✨</span></div>`; if (currentUser && currentImage) addToHistory(birdName, percent, currentImage); }); if (hasResults) { resultsSection.style.display = "block"; showMessage("✅ Birds discovered! Click on any species card."); } else { predictionsGrid.innerHTML = "<p style='padding:1rem;text-align:center;color:var(--text-muted)'>⚠️ Low confidence detection.</p>"; resultsSection.style.display = "block"; } } else { predictionsGrid.innerHTML = "<p style='padding:1rem;text-align:center;color:var(--text-muted)'>❌ No bird detected.</p>"; resultsSection.style.display = "block"; } }
+        function clearAll() { stopCamera(); currentImage = null; imagePreview.style.display = "none"; imagePreview.src = ""; video.style.display = "none"; captureBtn.style.display = "none"; analyzeBtn.disabled = true; resultsSection.style.display = "none"; predictionsGrid.innerHTML = ""; showMessage("Cleared — upload a new image."); }
+        function showMessage(msg, isError = false) { const m = document.createElement("div"); m.className = "message"; if (isError) m.style.borderLeftColor = "#ef4444"; m.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-triangle' : 'fa-info-circle'}"></i> ${msg}`; document.body.appendChild(m); setTimeout(() => m.remove(), 4000); }
+        function escapeHtml(str) { if (!str) return ""; return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); }
+        uploadArea.onclick = () => imageInput.click(); imageInput.onchange = e => { if (e.target.files[0]) handleFile(e.target.files[0]); }; urlBtn.onclick = handleUrlUpload; cameraBtn.onclick = startCamera; captureBtn.onclick = capturePhoto; analyzeBtn.onclick = analyzeImage; clearBtn.onclick = clearAll;
+        window.onclick = e => { if (e.target === document.getElementById('birdDetailModal')) closeBirdModal(); if (e.target === document.getElementById('loginModal')) closeLoginModal(); };
+        initTheme();
+        checkLoginAndShowModal();
+        showMessage("🦉 Welcome to BirdIQ! Upload a bird photo — history saves your discoveries. Light/dark toggle available.");
+    </script>
+</body>
+
+</html>
